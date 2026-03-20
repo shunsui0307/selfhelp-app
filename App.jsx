@@ -21,7 +21,13 @@ import {
   Globe,
   Star,
   PenLine,
-  ChevronLeft
+  ChevronLeft,
+  Camera,
+  LogOut,
+  Bell,
+  ShieldCheck,
+  CircleHelp,
+  Mail
 } from 'lucide-react';
 
 // --- モックデータ ---
@@ -69,26 +75,91 @@ export default function App() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [checkinSuccess, setCheckinSuccess] = useState(false);
   const [selectedDate, setSelectedDate] = useState(20);
+  const [showProfile, setShowProfile] = useState(false);
 
   // タブボタンコンポーネント
   const TabButton = ({ id, icon: Icon, label }) => (
     <button 
-      onClick={() => setActiveTab(id)}
+      onClick={() => { setActiveTab(id); setShowProfile(false); }}
       className={`flex flex-col items-center justify-center w-full py-2 transition-all duration-300 ${
-        activeTab === id ? 'text-blue-600 scale-110' : 'text-gray-400 hover:text-gray-600'
+        activeTab === id && !showProfile ? 'text-blue-600 scale-110' : 'text-gray-400 hover:text-gray-600'
       }`}
     >
-      <div className={`p-1 rounded-lg ${activeTab === id ? 'bg-blue-50' : ''}`}>
+      <div className={`p-1 rounded-lg ${activeTab === id && !showProfile ? 'bg-blue-50' : ''}`}>
         <Icon size={22} />
       </div>
       <span className="text-[10px] mt-1 font-bold">{label}</span>
     </button>
   );
 
-  // ダッシュボードコンポーネント
+  // プロフィール画面コンポーネント
+  const ProfileView = () => (
+    <div className="animate-in fade-in slide-in-from-right-4 duration-500 pb-10">
+      <div className="flex flex-col items-center py-8">
+        <div className="relative">
+          <div className="w-24 h-24 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-[32px] flex items-center justify-center text-white font-black text-2xl shadow-2xl border-4 border-white">
+            匿名
+          </div>
+          <button className="absolute -bottom-2 -right-2 bg-white p-2 rounded-full shadow-lg border border-gray-100 text-blue-600 hover:scale-110 transition-transform">
+            <Camera size={16} />
+          </button>
+        </div>
+        <h2 className="mt-4 text-xl font-black text-gray-800 tracking-tight">匿名ユーザー</h2>
+        <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase mt-1 px-3 py-1 bg-slate-100 rounded-full">ID: 8824-9102</p>
+      </div>
+
+      <div className="space-y-6">
+        <section className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
+          <h3 className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4">リカバリー設定</h3>
+          <div className="space-y-1">
+            {MOCK_SOBRIETY.map(record => (
+              <button key={record.id} className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-2xl transition-colors group">
+                <div className="flex items-center gap-3">
+                  <div className={`w-1.5 h-6 rounded-full ${record.color === 'blue' ? 'bg-blue-500' : 'bg-indigo-500'}`} />
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-gray-800">{record.target}</p>
+                    <p className="text-[10px] text-gray-400 font-medium">{record.startDate} から開始</p>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-gray-300 group-hover:text-gray-500" />
+              </button>
+            ))}
+            <button className="w-full flex items-center gap-3 p-4 text-blue-600 font-bold text-sm hover:bg-blue-50 rounded-2xl transition-colors">
+              <Plus size={18} />
+              <span>新しい目標を追加</span>
+            </button>
+          </div>
+        </section>
+
+        <section className="bg-white rounded-[32px] p-2 shadow-sm border border-gray-100 overflow-hidden">
+          {[
+            { icon: Bell, label: '通知設定', color: 'text-orange-500', bg: 'bg-orange-50' },
+            { icon: ShieldCheck, label: 'プライバシーとセキュリティ', color: 'text-green-500', bg: 'bg-green-50' },
+            { icon: Mail, label: 'お問い合わせ', color: 'text-blue-500', bg: 'bg-blue-50' },
+            { icon: CircleHelp, label: 'ヘルプセンター', color: 'text-purple-500', bg: 'bg-purple-50' },
+          ].map((item, i) => (
+            <button key={i} className="w-full flex items-center justify-between p-4 hover:bg-slate-50 rounded-2xl transition-colors group">
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 ${item.bg} ${item.color} rounded-xl flex items-center justify-center`}>
+                  <item.icon size={20} />
+                </div>
+                <span className="text-sm font-bold text-gray-700">{item.label}</span>
+              </div>
+              <ChevronRight size={16} className="text-gray-300 group-hover:text-gray-500" />
+            </button>
+          ))}
+        </section>
+
+        <button className="w-full flex items-center justify-center gap-2 p-5 text-red-500 font-black text-xs uppercase tracking-widest hover:bg-red-50 rounded-[28px] transition-colors">
+          <LogOut size={16} />
+          <span>ログアウト</span>
+        </button>
+      </div>
+    </div>
+  );
+
   const Dashboard = () => (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10 px-1">
-      {/* 1. デイリー・クオート */}
       <section className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-[32px] text-white relative overflow-hidden shadow-xl shadow-blue-100">
         <Quote className="absolute -right-2 -bottom-2 text-white/10 w-24 h-24 rotate-12" />
         <div className="relative z-10">
@@ -104,7 +175,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* 2. 今日の予定 & クイックアクション */}
       <section className="bg-white p-5 rounded-[32px] shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
@@ -146,7 +216,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* 3. ソーバーカウンター */}
       <section>
         <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 px-1">ソーバーカウンター</h2>
         <div className="grid grid-cols-2 gap-3">
@@ -165,7 +234,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* 4. カレンダーセクション */}
       <section className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
@@ -357,199 +425,114 @@ export default function App() {
     );
   };
 
-  // 会場検索モーダル
-  const SearchModal = () => (
-    <div className="fixed inset-0 bg-white z-[60] flex flex-col animate-in slide-in-from-bottom duration-300">
-      <header className="px-6 pt-12 pb-4 border-b border-gray-50 flex items-center gap-4">
-        <button onClick={() => setIsSearchModalOpen(false)} className="p-2 -ml-2 text-gray-400 hover:text-gray-600">
-          <X size={24} />
-        </button>
-        <div className="flex-1 relative">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input 
-            autoFocus
-            type="text" 
-            placeholder="会場、駅名、地域名で検索"
-            className="w-full bg-slate-50 border-none rounded-2xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-100 transition-all font-medium"
-          />
-        </div>
-      </header>
-
-      <div className="flex-1 overflow-y-auto px-6 py-4">
-        <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
-          {['現在地付近', 'オンライン', 'お気に入り', 'AA', 'NA', 'GA'].map((cat, i) => (
-            <button key={cat} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-black whitespace-nowrap border transition-all ${
-              i === 0 ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100' : 'bg-white text-gray-500 border-gray-100 hover:border-blue-200'
-            }`}>
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        <div className="space-y-4 mt-6">
-          <h3 className="text-[10px] font-black text-gray-300 uppercase tracking-widest px-1">近くの会場 (3件)</h3>
-          {MOCK_MEETINGS.map(m => (
-            <div key={m.id} className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm hover:border-blue-200 transition-all group">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-blue-600 font-black text-sm group-hover:bg-blue-50 transition-colors shadow-sm">{m.type}</div>
-                  <div>
-                    <h4 className="font-bold text-gray-800 text-sm leading-tight">{m.name}</h4>
-                    <p className="text-[10px] text-gray-400 font-medium mt-1">{m.address}</p>
-                  </div>
-                </div>
-                <button className="text-gray-200 hover:text-yellow-400 transition-colors"><Star size={20} /></button>
-              </div>
-              <div className="flex items-center justify-between mt-2">
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-bold">
-                    <Clock size={14} className="text-blue-500" /> {m.time}〜
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-bold">
-                    <Navigation size={14} className="text-blue-500" /> {m.distance}
-                  </div>
-                </div>
-                <button 
-                  onClick={() => { setIsSearchModalOpen(false); setIsCheckinModalOpen(true); }}
-                  className="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-[10px] font-bold hover:bg-blue-600 transition-colors shadow-lg shadow-slate-100 active:scale-95"
-                >
-                  チェックイン
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  // チェックインモーダル
-  const CheckinModal = () => (
-    <div className="fixed inset-0 bg-black/60 z-[70] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 animate-in slide-in-from-bottom duration-300 shadow-2xl relative">
-        {!checkinSuccess ? (
-          <>
-            <div className="w-12 h-1.5 bg-gray-100 rounded-full mx-auto mb-6"></div>
-            <h3 className="text-xl font-black mb-2 text-gray-800">会場にチェックイン</h3>
-            <p className="text-sm text-gray-400 mb-8 leading-relaxed">今日もミーティングへの参加、素晴らしい勇気です。あなたの回復をサポートします。</p>
-            
-            <div className="bg-blue-50/50 p-5 rounded-[32px] border border-blue-100 mb-8 flex items-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 font-black text-sm shadow-sm">AA</div>
-              <div>
-                <p className="font-bold text-gray-800 text-sm">渋谷木曜グループ</p>
-                <p className="text-[10px] text-blue-500 font-black uppercase tracking-widest mt-0.5">Start at 19:00</p>
-              </div>
-            </div>
-            
-            <div className="flex flex-col gap-3">
-              <button onClick={() => setCheckinSuccess(true)} className="w-full bg-blue-600 text-white py-4 rounded-[24px] font-black shadow-xl shadow-blue-100 active:scale-95 hover:bg-blue-700 transition-all">
-                チェックインを確定
-              </button>
-              <button onClick={() => setIsCheckinModalOpen(false)} className="w-full py-4 text-gray-400 text-xs font-black uppercase tracking-widest">
-                キャンセル
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-10 animate-in zoom-in duration-500">
-            <div className="w-24 h-24 bg-green-50 rounded-[40px] flex items-center justify-center mx-auto mb-6 shadow-sm border border-green-100">
-              <CheckCircle2 size={48} className="text-green-500" />
-            </div>
-            <h3 className="text-2xl font-black mb-2 text-gray-800 tracking-tighter">完了しました！</h3>
-            <p className="text-sm text-gray-400 mb-8 leading-relaxed px-4">記録はカレンダーに保存されました。一歩ずつ、今日一日を大切に進んでいきましょう。</p>
-            <button 
-              onClick={() => { setIsCheckinModalOpen(false); setCheckinSuccess(false); }}
-              className="w-full bg-slate-900 text-white py-4 rounded-[24px] font-black shadow-lg shadow-slate-100"
-            >
-              ホームへ戻る
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900 font-sans max-w-md mx-auto relative flex flex-col shadow-2xl border-x border-gray-100">
       {/* 共通ヘッダー */}
       <header className="bg-white/80 backdrop-blur-md px-6 pt-12 pb-4 sticky top-0 z-40 border-b border-gray-50">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-black text-gray-800 tracking-tighter flex items-center gap-1.5">
-              <span className="text-blue-600">Rec</span>overly
-            </h1>
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-              <p className="text-[9px] text-gray-400 font-black tracking-widest uppercase">One day at a time</p>
-            </div>
+            {showProfile ? (
+              <button 
+                onClick={() => setShowProfile(false)}
+                className="flex items-center gap-2 text-gray-400 hover:text-gray-800 transition-colors py-2"
+              >
+                <ChevronLeft size={20} />
+                <span className="text-sm font-black tracking-tight">戻る</span>
+              </button>
+            ) : (
+              <>
+                <h1 className="text-2xl font-black text-gray-800 tracking-tighter flex items-center gap-1.5">
+                  <span className="text-blue-600">Rec</span>overly
+                </h1>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                  <p className="text-[9px] text-gray-400 font-black tracking-widest uppercase">One day at a time</p>
+                </div>
+              </>
+            )}
           </div>
           <div className="flex gap-2">
-            <button className="p-2.5 text-gray-400 bg-slate-50 rounded-xl hover:text-gray-600 transition-colors">
-              <Settings size={18} />
+            {!showProfile && (
+              <button className="p-2.5 text-gray-400 bg-slate-50 rounded-xl hover:text-gray-600 transition-colors">
+                <Settings size={18} />
+              </button>
+            )}
+            <button 
+              onClick={() => setShowProfile(!showProfile)}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-[10px] shadow-lg border-2 transition-all ${
+                showProfile 
+                ? 'bg-slate-100 text-slate-500 border-white rotate-90 scale-90' 
+                : 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white border-white shadow-blue-50'
+              }`}
+            >
+              {showProfile ? <X size={20} /> : '匿名'}
             </button>
-            <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-[10px] shadow-lg shadow-blue-50 border-2 border-white">
-              匿名
-            </div>
           </div>
         </div>
       </header>
 
       {/* メインコンテンツ */}
       <main className="flex-1 px-5 py-6 pb-28 overflow-y-auto">
-        {activeTab === 'dashboard' && <Dashboard />}
-        
-        {activeTab === 'feed' && (
-          <div className="space-y-4 animate-in fade-in duration-500">
-            <div className="flex items-center justify-between px-1">
-              <h2 className="text-xl font-black text-gray-800 tracking-tighter">タイムライン</h2>
-              <button className="p-2 bg-blue-50 text-blue-600 rounded-full"><Plus size={20} /></button>
-            </div>
-            {MOCK_FEED.map(item => (
-              <div key={item.id} className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 hover:border-blue-100 transition-all">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-100 rounded-2xl flex items-center justify-center text-[10px] font-bold text-gray-400">
-                      <User size={18} />
+        {showProfile ? (
+          <ProfileView />
+        ) : (
+          <>
+            {activeTab === 'dashboard' && <Dashboard />}
+            
+            {activeTab === 'feed' && (
+              <div className="space-y-4 animate-in fade-in duration-500">
+                <div className="flex items-center justify-between px-1">
+                  <h2 className="text-xl font-black text-gray-800 tracking-tighter">タイムライン</h2>
+                  <button className="p-2 bg-blue-50 text-blue-600 rounded-full"><Plus size={20} /></button>
+                </div>
+                {MOCK_FEED.map(item => (
+                  <div key={item.id} className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 hover:border-blue-100 transition-all">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-slate-100 rounded-2xl flex items-center justify-center text-[10px] font-bold text-gray-400">
+                          <User size={18} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-black text-gray-800">{item.user}</p>
+                          <p className="text-[10px] text-gray-400 font-medium">{item.time}</p>
+                        </div>
+                      </div>
+                      <span className="text-[9px] bg-blue-50 px-2.5 py-1 rounded-full text-blue-600 font-black uppercase tracking-wider">{item.action}</span>
                     </div>
-                    <div>
-                      <p className="text-xs font-black text-gray-800">{item.user}</p>
-                      <p className="text-[10px] text-gray-400 font-medium">{item.time}</p>
+                    <p className="text-sm text-gray-600 leading-relaxed mb-4">{item.content}</p>
+                    <div className="flex items-center gap-4">
+                      <button className="flex items-center gap-1.5 text-gray-400 hover:text-red-400 transition-colors group">
+                        <Heart size={18} fill={item.likes > 0 ? "currentColor" : "none"} className={item.likes > 0 ? "text-red-400" : "group-hover:scale-110 transition-transform"} />
+                        <span className="text-[11px] font-bold">{item.likes > 0 ? `${item.likes}人が共感` : '共感する'}</span>
+                      </button>
+                      <button className="flex items-center gap-1.5 text-gray-400 hover:text-blue-400 transition-colors">
+                        <MessageSquare size={16} />
+                        <span className="text-[11px] font-bold">コメント</span>
+                      </button>
                     </div>
                   </div>
-                  <span className="text-[9px] bg-blue-50 px-2.5 py-1 rounded-full text-blue-600 font-black uppercase tracking-wider">{item.action}</span>
-                </div>
-                <p className="text-sm text-gray-600 leading-relaxed mb-4">{item.content}</p>
-                <div className="flex items-center gap-4">
-                  <button className="flex items-center gap-1.5 text-gray-400 hover:text-red-400 transition-colors group">
-                    <Heart size={18} fill={item.likes > 0 ? "currentColor" : "none"} className={item.likes > 0 ? "text-red-400" : "group-hover:scale-110 transition-transform"} />
-                    <span className="text-[11px] font-bold">{item.likes > 0 ? `${item.likes}人が共感` : '共感する'}</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 text-gray-400 hover:text-blue-400 transition-colors">
-                    <MessageSquare size={16} />
-                    <span className="text-[11px] font-bold">コメント</span>
-                  </button>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            )}
 
-        {activeTab === 'analytics' && <Analytics />}
+            {activeTab === 'analytics' && <Analytics />}
 
-        {activeTab === 'friends' && (
-          <div className="flex flex-col items-center justify-center h-[60vh] text-gray-400 px-10 text-center animate-in fade-in zoom-in duration-500">
-            <div className="w-24 h-24 bg-white rounded-[40px] flex items-center justify-center mb-8 shadow-sm border border-gray-100 relative">
-              <Users size={40} className="text-blue-500 opacity-20" />
-              <div className="absolute top-0 right-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center animate-bounce">
-                <Plus size={12} className="text-blue-600" />
+            {activeTab === 'friends' && (
+              <div className="flex flex-col items-center justify-center h-[60vh] text-gray-400 px-10 text-center animate-in fade-in zoom-in duration-500">
+                <div className="w-24 h-24 bg-white rounded-[40px] flex items-center justify-center mb-8 shadow-sm border border-gray-100 relative">
+                  <Users size={40} className="text-blue-500 opacity-20" />
+                  <div className="absolute top-0 right-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center animate-bounce">
+                    <Plus size={12} className="text-blue-600" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-black text-gray-800 mb-3 tracking-tight">つながりを大切に</h3>
+                <p className="text-xs font-medium leading-relaxed mb-8 opacity-70">フレンド機能は現在準備中です。<br/>回復を支え合う仲間を見つけましょう。</p>
+                <button className="bg-slate-900 text-white px-8 py-3 rounded-2xl text-xs font-black shadow-lg shadow-slate-100">
+                  招待コードを発行する
+                </button>
               </div>
-            </div>
-            <h3 className="text-lg font-black text-gray-800 mb-3 tracking-tight">つながりを大切に</h3>
-            <p className="text-xs font-medium leading-relaxed mb-8 opacity-70">フレンド機能は現在準備中です。<br/>回復を支え合う仲間を見つけましょう。</p>
-            <button className="bg-slate-900 text-white px-8 py-3 rounded-2xl text-xs font-black shadow-lg shadow-slate-100">
-              招待コードを発行する
-            </button>
-          </div>
+            )}
+          </>
         )}
       </main>
 
@@ -563,9 +546,102 @@ export default function App() {
         </div>
       </nav>
 
-      {/* 各種モーダル */}
-      {isCheckinModalOpen && <CheckinModal />}
-      {isSearchModalOpen && <SearchModal />}
+      {/* 各種モーダル (Profile表示中も動作可能にするため最前面へ) */}
+      {isCheckinModalOpen && (
+        <div className="fixed inset-0 bg-black/60 z-[70] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 animate-in slide-in-from-bottom duration-300 shadow-2xl relative">
+            {!checkinSuccess ? (
+              <>
+                <div className="w-12 h-1.5 bg-gray-100 rounded-full mx-auto mb-6"></div>
+                <h3 className="text-xl font-black mb-2 text-gray-800">会場にチェックイン</h3>
+                <p className="text-sm text-gray-400 mb-8 leading-relaxed">今日もミーティングへの参加、素晴らしい勇気です。あなたの回復をサポートします。</p>
+                <div className="bg-blue-50/50 p-5 rounded-[32px] border border-blue-100 mb-8 flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 font-black text-sm shadow-sm">AA</div>
+                  <div>
+                    <p className="font-bold text-gray-800 text-sm">渋谷木曜グループ</p>
+                    <p className="text-[10px] text-blue-500 font-black uppercase tracking-widest mt-0.5">Start at 19:00</p>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <button onClick={() => setCheckinSuccess(true)} className="w-full bg-blue-600 text-white py-4 rounded-[24px] font-black shadow-xl shadow-blue-100 active:scale-95 hover:bg-blue-700 transition-all">
+                    チェックインを確定
+                  </button>
+                  <button onClick={() => setIsCheckinModalOpen(false)} className="w-full py-4 text-gray-400 text-xs font-black uppercase tracking-widest">
+                    キャンセル
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-10 animate-in zoom-in duration-500">
+                <div className="w-24 h-24 bg-green-50 rounded-[40px] flex items-center justify-center mx-auto mb-6 shadow-sm border border-green-100">
+                  <CheckCircle2 size={48} className="text-green-500" />
+                </div>
+                <h3 className="text-2xl font-black mb-2 text-gray-800 tracking-tighter">完了しました！</h3>
+                <p className="text-sm text-gray-400 mb-8 leading-relaxed px-4">記録はカレンダーに保存されました。一歩ずつ、今日一日を大切に進んでいきましょう。</p>
+                <button 
+                  onClick={() => { setIsCheckinModalOpen(false); setCheckinSuccess(false); }}
+                  className="w-full bg-slate-900 text-white py-4 rounded-[24px] font-black shadow-lg shadow-slate-100"
+                >
+                  ホームへ戻る
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {isSearchModalOpen && (
+        <div className="fixed inset-0 bg-white z-[60] flex flex-col animate-in slide-in-from-bottom duration-300">
+          <header className="px-6 pt-12 pb-4 border-b border-gray-50 flex items-center gap-4">
+            <button onClick={() => setIsSearchModalOpen(false)} className="p-2 -ml-2 text-gray-400 hover:text-gray-600">
+              <X size={24} />
+            </button>
+            <div className="flex-1 relative">
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input autoFocus type="text" placeholder="会場、駅名、地域名で検索" className="w-full bg-slate-50 border-none rounded-2xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-100 transition-all font-medium" />
+            </div>
+          </header>
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
+              {['現在地付近', 'オンライン', 'お気に入り', 'AA', 'NA', 'GA'].map((cat, i) => (
+                <button key={cat} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-black whitespace-nowrap border transition-all ${
+                  i === 0 ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100' : 'bg-white text-gray-500 border-gray-100 hover:border-blue-200'
+                }`}>
+                  {cat}
+                </button>
+              ))}
+            </div>
+            <div className="space-y-4 mt-6">
+              <h3 className="text-[10px] font-black text-gray-300 uppercase tracking-widest px-1">近くの会場 (3件)</h3>
+              {MOCK_MEETINGS.map(m => (
+                <div key={m.id} className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm hover:border-blue-200 transition-all group">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-blue-600 font-black text-sm group-hover:bg-blue-50 transition-colors shadow-sm">{m.type}</div>
+                      <div>
+                        <h4 className="font-bold text-gray-800 text-sm leading-tight">{m.name}</h4>
+                        <p className="text-[10px] text-gray-400 font-medium mt-1">{m.address}</p>
+                      </div>
+                    </div>
+                    <button className="text-gray-200 hover:text-yellow-400 transition-colors"><Star size={20} /></button>
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex gap-4">
+                      <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-bold">
+                        <Clock size={14} className="text-blue-500" /> {m.time}〜
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-bold">
+                        <Navigation size={14} className="text-blue-500" /> {m.distance}
+                      </div>
+                    </div>
+                    <button onClick={() => { setIsSearchModalOpen(false); setIsCheckinModalOpen(true); }} className="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-[10px] font-bold shadow-lg active:scale-95">チェックイン</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       
       <style>{`
         @keyframes fade-in {
@@ -592,7 +668,6 @@ export default function App() {
         input:focus {
           outline: none;
         }
-        /* iOS モメンタムスクロール */
         main {
           -webkit-overflow-scrolling: touch;
         }
