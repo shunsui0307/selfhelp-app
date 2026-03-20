@@ -50,6 +50,11 @@ const MOCK_CALENDAR_DATA = {
   '2024-03-22': { type: 'upcoming', title: '横浜GA' },
 };
 
+const MOCK_FEED = [
+  { id: 1, user: '匿名A', action: 'ミーティング参加', time: '1時間前', content: '今日はステップ3について分かち合いました。少し心が軽くなった気がします。', likes: 2 },
+  { id: 2, user: '仲間B', action: '30日達成', time: '3時間前', content: '静かな一日を過ごせています。仲間の支えに感謝します。', likes: 5 },
+];
+
 const calculateDays = (dateStr) => {
   const start = new Date(dateStr);
   const now = new Date();
@@ -62,7 +67,7 @@ export default function App() {
   const [isCheckinModalOpen, setIsCheckinModalOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [checkinSuccess, setCheckinSuccess] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(20); // 3月20日を選択状態
+  const [selectedDate, setSelectedDate] = useState(20);
 
   const TabButton = ({ id, icon: Icon, label }) => (
     <button 
@@ -94,7 +99,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 2. Today's Meeting & Action Box */}
+      {/* 2. Today's Meeting */}
       <section className="bg-white p-5 rounded-[32px] shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
@@ -155,7 +160,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 4. Activity Calendar (Integrated History & Future) */}
+      {/* 4. Activity Calendar */}
       <section className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
@@ -174,7 +179,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Calendar Grid */}
         <div className="grid grid-cols-7 gap-1 mb-6">
           {['月','火','水','木','金','土','日'].map(d => (
             <div key={d} className="text-[10px] text-center font-bold text-gray-300 pb-2">{d}</div>
@@ -204,15 +208,14 @@ export default function App() {
           })}
         </div>
 
-        {/* Detail View for Selected Date */}
-        <div className="border-t border-gray-50 pt-5 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="border-t border-gray-50 pt-5">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">3月 {selectedDate}日の詳細</h3>
             <button className="text-[10px] font-bold text-blue-600">+ 予定を追加</button>
           </div>
           
           {MOCK_CALENDAR_DATA[`2024-03-${selectedDate.toString().padStart(2, '0')}`] ? (
-            <div className="flex items-center gap-4 bg-slate-50/50 p-3 rounded-2xl">
+            <div className="flex items-center gap-4 bg-slate-50/50 p-3 rounded-2xl animate-in fade-in slide-in-from-top-1">
               <div className={`w-2 h-10 rounded-full ${
                 MOCK_CALENDAR_DATA[`2024-03-${selectedDate.toString().padStart(2, '0')}`].type === 'completed' ? 'bg-green-400' : 'bg-blue-400'
               }`} />
@@ -235,69 +238,121 @@ export default function App() {
     </div>
   );
 
-  const Analytics = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <h2 className="text-xl font-bold text-gray-800 px-1">分析レポート</h2>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white p-5 rounded-[28px] border border-gray-100 shadow-sm">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">今月の参加数</p>
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-black text-gray-800">12</span>
-            <span className="text-xs text-gray-500 font-bold">回</span>
+  const Analytics = () => {
+    // 円グラフ計算
+    const radius = 15.9155;
+    const circumference = 2 * Math.PI * radius;
+    const alcoholPercentage = 70;
+    const gamblingPercentage = 30;
+    
+    // セグメント間にギャップを作るための調整
+    const gap = 2; // 隙間のサイズ
+    const alcoholStroke = ((alcoholPercentage - gap) / 100) * circumference;
+    const gamblingStroke = ((gamblingPercentage - gap) / 100) * circumference;
+    
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500 pb-10">
+        <h2 className="text-xl font-bold text-gray-800 px-1">分析レポート</h2>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white p-5 rounded-[28px] border border-gray-100 shadow-sm">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">今月の参加数</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-black text-gray-800">12</span>
+              <span className="text-xs text-gray-500 font-bold">回</span>
+            </div>
+            <div className="mt-3 w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-blue-500 h-full w-[60%]"></div>
+            </div>
           </div>
-          <div className="mt-3 w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-blue-500 h-full w-[60%]"></div>
+          <div className="bg-white p-5 rounded-[28px] border border-gray-100 shadow-sm">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">最長継続</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-black text-gray-800">156</span>
+              <span className="text-xs text-gray-500 font-bold">日</span>
+            </div>
+            <div className="mt-3 text-[10px] text-green-500 font-bold flex items-center gap-1">
+              <Award size={10} /> 記録更新中
+            </div>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-[28px] border border-gray-100 shadow-sm">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">最長継続</p>
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-black text-gray-800">156</span>
-            <span className="text-xs text-gray-500 font-bold">日</span>
-          </div>
-          <div className="mt-3 text-[10px] text-green-500 font-bold flex items-center gap-1">
-            <Award size={10} /> 記録更新中
-          </div>
-        </div>
-      </div>
 
-      <section className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
-        <h3 className="text-sm font-bold text-gray-700 mb-6 flex items-center gap-2">
-          <PieIcon size={16} className="text-indigo-500" />
-          アディクション別比率
-        </h3>
-        <div className="flex items-center gap-8">
-          <div className="relative w-24 h-24">
-            <svg className="w-full h-full" viewBox="0 0 36 36">
-              <circle cx="18" cy="18" r="16" fill="none" className="text-blue-500" stroke="currentColor" strokeWidth="5" strokeDasharray="70 100" strokeLinecap="round" />
-              <circle cx="18" cy="18" r="16" fill="none" className="text-indigo-300" stroke="currentColor" strokeWidth="5" strokeDasharray="30 100" strokeDashoffset="-70" strokeLinecap="round" />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center flex-col">
-              <span className="text-[10px] font-black text-gray-800">TOTAL</span>
-              <span className="text-[12px] text-blue-600 font-black">60</span>
+        {/* Improved Pie Chart Section */}
+        <section className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-2 mb-8">
+            <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600">
+              <PieIcon size={18} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-800">アディクション別比率</h3>
+              <p className="text-[10px] text-gray-400 font-medium">今月のアクティビティ内訳</p>
             </div>
           </div>
-          <div className="flex-1 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                <span className="text-xs font-bold text-gray-600">アルコール</span>
+
+          <div className="flex flex-col items-center">
+            <div className="relative w-48 h-48 mb-8">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                {/* Background Circle */}
+                <circle cx="18" cy="18" r={radius} fill="none" className="text-slate-50" stroke="currentColor" strokeWidth="3.5" />
+                
+                {/* Alcohol Segment */}
+                <circle 
+                  cx="18" cy="18" r={radius} fill="none" 
+                  className="text-blue-500" 
+                  stroke="currentColor" 
+                  strokeWidth="3.5" 
+                  strokeDasharray={`${alcoholStroke} ${circumference - alcoholStroke}`}
+                  strokeLinecap="round"
+                />
+                
+                {/* Gambling Segment */}
+                <circle 
+                  cx="18" cy="18" r={radius} fill="none" 
+                  className="text-indigo-300" 
+                  stroke="currentColor" 
+                  strokeWidth="3.5" 
+                  strokeDasharray={`${gamblingStroke} ${circumference - gamblingStroke}`}
+                  strokeDashoffset={-((alcoholPercentage / 100) * circumference)}
+                  strokeLinecap="round"
+                />
+              </svg>
+              
+              {/* Center Text */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Total</span>
+                <span className="text-3xl font-black text-gray-800 tracking-tighter">60</span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase">Times</span>
               </div>
-              <span className="text-xs font-black text-gray-800">70%</span>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-indigo-300"></div>
-                <span className="text-xs font-bold text-gray-600">ギャンブル</span>
+
+            {/* Legend Cards */}
+            <div className="w-full grid grid-cols-2 gap-3">
+              <div className="bg-slate-50 p-4 rounded-2xl flex flex-col gap-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+                  <span className="text-[11px] font-black text-gray-500">アルコール</span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-lg font-black text-gray-800">42</span>
+                  <span className="text-[10px] text-gray-400 font-bold">回 (70%)</span>
+                </div>
               </div>
-              <span className="text-xs font-black text-gray-800">30%</span>
+              <div className="bg-slate-50 p-4 rounded-2xl flex flex-col gap-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2.5 h-2.5 rounded-full bg-indigo-300"></div>
+                  <span className="text-[11px] font-black text-gray-500">ギャンブル</span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-lg font-black text-gray-800">18</span>
+                  <span className="text-[10px] text-gray-400 font-bold">回 (30%)</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
-    </div>
-  );
+        </section>
+      </div>
+    );
+  };
 
   const SearchModal = () => (
     <div className="fixed inset-0 bg-white z-[60] flex flex-col animate-in slide-in-from-bottom duration-300">
@@ -370,7 +425,7 @@ export default function App() {
           <>
             <div className="w-12 h-1.5 bg-gray-100 rounded-full mx-auto mb-6"></div>
             <h3 className="text-xl font-black mb-2 text-gray-800">会場にチェックイン</h3>
-            <p className="text-sm text-gray-400 mb-8 leading-relaxed">今日もミーティングへの参加、素晴らしい勇気です。現在の場所にチェックインしますか？</p>
+            <p className="text-sm text-gray-400 mb-8 leading-relaxed">今日もミーティングへの参加、素晴らしい勇気です。</p>
             
             <div className="bg-blue-50/50 p-5 rounded-[32px] border border-blue-100 mb-8 flex items-center gap-4">
               <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 font-black text-sm shadow-sm">AA</div>
@@ -410,7 +465,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900 font-sans max-w-md mx-auto relative flex flex-col shadow-2xl">
-      {/* Header */}
       <header className="bg-white/80 backdrop-blur-md px-6 pt-12 pb-4 sticky top-0 z-40">
         <div className="flex justify-between items-center">
           <div>
@@ -427,7 +481,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="flex-1 px-5 py-6 pb-28 overflow-y-auto">
         {activeTab === 'dashboard' && <Dashboard />}
         {activeTab === 'feed' && (
@@ -466,7 +519,6 @@ export default function App() {
         )}
       </main>
 
-      {/* Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 px-8 py-4 z-50 max-w-md mx-auto rounded-t-[40px] shadow-[0_-15px_50px_rgba(0,0,0,0.06)]">
         <div className="flex justify-between items-end">
           <TabButton id="dashboard" icon={Clock} label="ホーム" />
@@ -476,7 +528,6 @@ export default function App() {
         </div>
       </nav>
 
-      {/* Modals */}
       {isCheckinModalOpen && <CheckinModal />}
       {isSearchModalOpen && <SearchModal />}
       
@@ -502,8 +553,3 @@ export default function App() {
     </div>
   );
 }
-
-const MOCK_FEED = [
-  { id: 1, user: '匿名A', action: 'ミーティング参加', time: '1時間前', content: '今日はステップ3について分かち合いました。少し心が軽くなった気がします。', likes: 2 },
-  { id: 2, user: '仲間B', action: '30日達成', time: '3時間前', content: '静かな一日を過ごせています。仲間の支えに感謝します。', likes: 5 },
-];
