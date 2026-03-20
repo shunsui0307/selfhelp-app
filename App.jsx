@@ -503,7 +503,6 @@ export default function App() {
                   </div>
                   
                   <div className="flex items-center justify-around gap-8">
-                    {/* SVGによるシンプルな円グラフ */}
                     <div className="relative w-32 h-32">
                       <svg viewBox="0 0 36 36" className="w-full h-full rotate-[-90deg]">
                         <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="#f1f5f9" strokeWidth="3.8"></circle>
@@ -535,7 +534,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* あなたと似ている人がよく参加しているグループ */}
                 <section className="animate-in fade-in duration-700 delay-200">
                   <div className="flex items-center gap-2 mb-4">
                     <Sparkles size={16} className="text-orange-400" />
@@ -616,9 +614,24 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 mb-8">
                   <button onClick={() => setCheckinSuccess(true)} className="w-full bg-blue-600 text-white py-4 rounded-[24px] font-black shadow-xl">チェックインを確定</button>
                   <button onClick={() => setIsCheckinModalOpen(false)} className="w-full py-4 text-gray-400 text-xs font-black tracking-widest uppercase">キャンセル</button>
+                </div>
+
+                <div className="border-t border-gray-50 pt-8 pb-4">
+                  <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-4">他の人はこんなグループにも参加しています</h4>
+                  <div className="space-y-3">
+                    {RECOMMENDED_MEETINGS.slice(0, 2).map((m) => (
+                      <div key={m.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-[10px] font-black text-blue-600 shadow-sm">{m.type}</div>
+                          <span className="text-xs font-bold text-gray-700">{m.name}</span>
+                        </div>
+                        <ChevronRight size={14} className="text-gray-300" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </>
             ) : (
@@ -672,7 +685,7 @@ export default function App() {
       {/* リセット確認モーダル */}
       {resetTarget && (
         <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-6 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-sm rounded-[40px] p-8 animate-in zoom-in shadow-2xl text-center border border-white">
+          <div className="bg-white w-full max-w-[calc(100%-3rem)] sm:max-w-sm rounded-[40px] p-8 animate-in zoom-in shadow-2xl text-center border border-white">
             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
               <AlertTriangle size={32} />
             </div>
