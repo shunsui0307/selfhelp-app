@@ -648,7 +648,7 @@ export default function App() {
       )}
       
       {isSearchModalOpen && (
-        <div className="fixed inset-0 bg-white z-[60] flex flex-col animate-in slide-in-from-bottom duration-300">
+        <div className="fixed inset-0 bg-white z-[60] flex flex-col animate-in slide-in-from-bottom duration-300 max-w-md mx-auto left-0 right-0 shadow-2xl">
           <header className="px-6 pt-12 pb-4 border-b border-gray-50 flex items-center gap-4">
             <button onClick={() => setIsSearchModalOpen(false)} className="p-2 -ml-2 text-gray-400 hover:text-gray-600"><X size={24} /></button>
             <div className="flex-1 relative">
@@ -656,7 +656,7 @@ export default function App() {
               <input autoFocus type="text" placeholder="会場を検索" className="w-full bg-slate-50 border-none rounded-2xl py-3 pl-11 pr-4 text-sm font-medium" />
             </div>
           </header>
-          <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="flex-1 overflow-y-auto px-6 py-4 no-scrollbar">
             <div className="space-y-4 mt-6">
               {MOCK_MEETINGS.map(m => (
                 <div key={m.id} className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm transition-all group">
@@ -673,7 +673,7 @@ export default function App() {
                     <div className="flex gap-4">
                       <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-bold"><Clock size={14} className="text-blue-500" /> {m.time}〜</div>
                     </div>
-                    <button onClick={() => { setIsSearchModalOpen(false); setIsCheckinModalOpen(true); }} className="bg-slate-900 text-white px-8 py-2.5 rounded-2xl text-[10px] font-bold shadow-lg">詳細</button>
+                    <button onClick={() => { setIsSearchModalOpen(false); setIsCheckinModalOpen(true); }} className="bg-slate-900 text-white px-8 py-2.5 rounded-2xl text-[10px] font-bold shadow-lg active:scale-95">詳細</button>
                   </div>
                 </div>
               ))}
