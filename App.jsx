@@ -11,8 +11,19 @@ import {
   Users,
   Award,
   ChevronRight,
-  Settings
+  Settings,
+  Quote
 } from 'lucide-react';
+
+// --- Mock Data: Daily Quotes ---
+const DAILY_QUOTES = [
+  { text: "今日一日、私たちは静穏を求めて歩みます。", source: "12ステップの知恵" },
+  { text: "変えられないものを受け入れる平静さを。", source: "ニーバーの祈り" },
+  { text: "一度に一つずつ。一歩ずつ（One Day at a Time）", source: "AAの伝統" },
+  { text: "私たちは孤独ではありません。仲間がいます。", source: "回復の原則" },
+  { text: "今日だけは、怒らず、心配せず、感謝して。", source: "アファメーション" },
+  { text: "進歩であり、完璧ではありません。", source: "ステップの歩み" }
+];
 
 // --- Mock Data ---
 const MOCK_SOBRIETY = [
@@ -43,6 +54,13 @@ export default function App() {
   const [sobrietyRecords, setSobrietyRecords] = useState(MOCK_SOBRIETY);
   const [isCheckinModalOpen, setIsCheckinModalOpen] = useState(false);
   const [checkinSuccess, setCheckinSuccess] = useState(false);
+  const [dailyQuote, setDailyQuote] = useState(DAILY_QUOTES[0]);
+
+  useEffect(() => {
+    // 起動時にランダムで言葉を選択（本来は日付に基づくと良い）
+    const randomIndex = Math.floor(Math.random() * DAILY_QUOTES.length);
+    setDailyQuote(DAILY_QUOTES[randomIndex]);
+  }, []);
 
   // Components
   const TabButton = ({ id, icon: Icon, label }) => (
@@ -59,6 +77,19 @@ export default function App() {
 
   const Dashboard = () => (
     <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Daily Quote Section */}
+      <section className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-3xl border border-blue-100 relative overflow-hidden">
+        <Quote className="absolute -right-2 -bottom-2 text-blue-100 w-24 h-24 rotate-12" />
+        <div className="relative z-10">
+          <p className="text-blue-800 text-sm font-medium leading-relaxed italic mb-2">
+            「{dailyQuote.text}」
+          </p>
+          <p className="text-blue-400 text-[10px] font-bold tracking-widest uppercase">
+            — {dailyQuote.source}
+          </p>
+        </div>
+      </section>
+
       <section>
         <h2 className="text-lg font-semibold text-gray-700 mb-3 px-1">ソーバーカウンター</h2>
         <div className="grid grid-cols-1 gap-4">
@@ -235,7 +266,7 @@ export default function App() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-xl font-bold text-gray-800">リカバリー・ログ</h1>
-            <p className="text-xs text-gray-400">今日は「静穏」を大切にしましょう</p>
+            <p className="text-xs text-gray-400 font-medium">One Day at a Time</p>
           </div>
           <div className="flex gap-3">
             <button className="p-2 text-gray-400 hover:text-gray-600"><Settings size={20} /></button>
