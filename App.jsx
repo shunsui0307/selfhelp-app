@@ -65,8 +65,9 @@ const MOCK_FEED = [
 ];
 
 const RECOMMENDED_MEETINGS = [
-  { id: 201, name: '港区ナイトAA', type: 'AA', match: '92%' },
-  { id: 202, name: 'オンライン・ステップ学習', type: 'Online', match: '85%' },
+  { id: 201, name: '港区ナイトAA', type: 'AA', match: '92%', location: '六本木' },
+  { id: 202, name: 'オンライン・ステップ学習', type: 'Online', match: '85%', location: 'Zoom' },
+  { id: 203, name: '代々木ビギナーズ', type: 'AA', match: '78%', location: '代々木' },
 ];
 
 export default function App() {
@@ -475,24 +476,103 @@ export default function App() {
               </div>
             )}
             {activeTab === 'analytics' && (
-              <div className="space-y-6 animate-in fade-in duration-500">
-                <h2 className="text-xl font-black text-gray-800 tracking-tighter px-1">分析レポート</h2>
+              <div className="space-y-6 animate-in fade-in duration-500 px-1">
+                <h2 className="text-xl font-black text-gray-800 tracking-tighter">分析レポート</h2>
+                
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white p-5 rounded-[32px] border border-gray-100 shadow-sm">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">今月の参加数</p>
+                  <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex flex-col justify-center">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">今月の参加数</p>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black text-gray-800">12</span>
-                      <span className="text-xs text-gray-500 font-bold">回</span>
+                      <span className="text-3xl font-black text-gray-800">12</span>
+                      <span className="text-xs text-gray-400 font-bold">回</span>
                     </div>
                   </div>
-                  <div className="bg-white p-5 rounded-[32px] border border-gray-100 shadow-sm">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">現在の継続</p>
+                  <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm flex flex-col justify-center">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">現在の継続</p>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-black text-gray-800">{soberCounts['アルコール']}</span>
-                      <span className="text-xs text-gray-500 font-bold">日</span>
+                      <span className="text-3xl font-black text-gray-800">{soberCounts['アルコール']}</span>
+                      <span className="text-xs text-gray-400 font-bold">日</span>
                     </div>
                   </div>
                 </div>
+
+                <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm">
+                  <div className="flex items-center justify-between mb-8">
+                    <h3 className="text-sm font-black text-gray-800">アディクション別比率</h3>
+                    <PieIcon size={18} className="text-blue-500" />
+                  </div>
+                  
+                  <div className="flex items-center justify-around gap-8">
+                    {/* SVGによるシンプルな円グラフ */}
+                    <div className="relative w-32 h-32">
+                      <svg viewBox="0 0 36 36" className="w-full h-full rotate-[-90deg]">
+                        <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="#f1f5f9" strokeWidth="3.8"></circle>
+                        <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="#2563eb" strokeWidth="3.8" strokeDasharray="65 100"></circle>
+                        <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="#4f46e5" strokeWidth="3.8" strokeDasharray="35 100" strokeDashoffset="-65"></circle>
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center flex-col">
+                        <span className="text-xs font-black text-gray-800">TOTAL</span>
+                        <span className="text-[10px] font-bold text-gray-400">Recovery</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-blue-600" />
+                        <div>
+                          <p className="text-[10px] font-black text-gray-800">アルコール</p>
+                          <p className="text-[10px] text-gray-400 font-bold">65%</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-indigo-600" />
+                        <div>
+                          <p className="text-[10px] font-black text-gray-800">ギャンブル</p>
+                          <p className="text-[10px] text-gray-400 font-bold">35%</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* あなたと似ている人がよく参加しているグループ */}
+                <section className="animate-in fade-in duration-700 delay-200">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Sparkles size={16} className="text-orange-400" />
+                    <h3 className="text-sm font-black text-gray-800">あなたと似ている人がよく参加しているグループ</h3>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {RECOMMENDED_MEETINGS.map((meeting) => (
+                      <button 
+                        key={meeting.id}
+                        className="w-full bg-white p-5 rounded-[32px] border border-gray-100 shadow-sm flex items-center justify-between group active:scale-[0.98] transition-all"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-blue-600 font-black text-sm group-hover:bg-blue-50 transition-colors">
+                            {meeting.type}
+                          </div>
+                          <div className="text-left">
+                            <p className="text-sm font-black text-gray-800">{meeting.name}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
+                                <MapPin size={10} /> {meeting.location}
+                              </span>
+                              <span className="text-[9px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+                                マッチ度 {meeting.match}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight size={18} className="text-gray-300 group-hover:text-gray-500 group-hover:translate-x-1 transition-all" />
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <button className="w-full mt-4 py-4 text-blue-600 text-[11px] font-black uppercase tracking-widest bg-blue-50/50 rounded-2xl hover:bg-blue-50 transition-colors">
+                    他のグループも探す
+                  </button>
+                </section>
               </div>
             )}
             {activeTab === 'friends' && (
@@ -533,23 +613,6 @@ export default function App() {
                   <div>
                     <p className="font-bold text-gray-800 text-sm">渋谷木曜グループ</p>
                     <p className="text-[10px] text-blue-500 font-black uppercase tracking-widest mt-0.5">Start at 19:00</p>
-                  </div>
-                </div>
-
-                <div className="mb-8">
-                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 px-1 flex items-center gap-2">
-                    <Sparkles size={12} className="text-orange-400" /> 他の人はこんなグループにも参加しています
-                  </h4>
-                  <div className="space-y-3">
-                    {RECOMMENDED_MEETINGS.map(item => (
-                      <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-[10px] font-black text-slate-400">{item.type}</div>
-                          <span className="text-xs font-bold text-gray-700">{item.name}</span>
-                        </div>
-                        <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-2 py-1 rounded-lg">マッチ度 {item.match}</span>
-                      </div>
-                    ))}
                   </div>
                 </div>
 
