@@ -15,7 +15,12 @@ import {
   Quote,
   BarChart3,
   Search,
-  PieChart as PieIcon
+  PieChart as PieIcon,
+  X,
+  Navigation,
+  Globe,
+  Star,
+  PenLine
 } from 'lucide-react';
 
 // --- Mock Data: Daily Quotes ---
@@ -33,8 +38,9 @@ const MOCK_SOBRIETY = [
 ];
 
 const MOCK_MEETINGS = [
-  { id: 101, name: '渋谷木曜AAグループ', time: '19:00', distance: '150m', type: 'AA' },
-  { id: 102, name: '新宿NAステップ', time: '18:30', distance: '1.2km', type: 'NA' },
+  { id: 101, name: '渋谷木曜AAグループ', time: '19:00', distance: '150m', type: 'AA', address: '東京都渋谷区...' },
+  { id: 102, name: '新宿NAステップ', time: '18:30', distance: '1.2km', type: 'NA', address: '東京都新宿区...' },
+  { id: 103, name: '池袋GA日曜', time: '14:00', distance: '3.5km', type: 'GA', address: '東京都豊島区...' },
 ];
 
 const MOCK_FEED = [
@@ -52,8 +58,10 @@ const calculateDays = (dateStr) => {
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isCheckinModalOpen, setIsCheckinModalOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [checkinSuccess, setCheckinSuccess] = useState(false);
   const [dailyQuote, setDailyQuote] = useState(DAILY_QUOTES[0]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * DAILY_QUOTES.length);
@@ -94,7 +102,12 @@ export default function App() {
             <MapPin size={18} className="text-blue-500" />
             今日のミーティング
           </h2>
-          <button className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded-lg">他を探す</button>
+          <button 
+            onClick={() => setIsSearchModalOpen(true)}
+            className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded-lg"
+          >
+            他を探す
+          </button>
         </div>
         
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
@@ -113,12 +126,18 @@ export default function App() {
               チェックイン
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button className="flex items-center justify-center gap-1.5 py-2 bg-gray-50 rounded-xl text-[11px] font-medium text-gray-500 hover:bg-gray-100">
-              <Plus size={14} /> 手動で登録
+          <div className="grid grid-cols-3 gap-2">
+            <button className="flex flex-col items-center justify-center gap-1 py-2 bg-gray-50 rounded-xl text-[10px] font-medium text-gray-500 hover:bg-gray-100">
+              <Plus size={14} /> <span>手動登録</span>
             </button>
-            <button className="flex items-center justify-center gap-1.5 py-2 bg-gray-50 rounded-xl text-[11px] font-medium text-gray-500 hover:bg-gray-100">
-              <Search size={14} /> 会場を検索
+            <button 
+              onClick={() => setIsSearchModalOpen(true)}
+              className="flex flex-col items-center justify-center gap-1 py-2 bg-gray-50 rounded-xl text-[10px] font-medium text-gray-500 hover:bg-gray-100"
+            >
+              <Search size={14} /> <span>会場検索</span>
+            </button>
+            <button className="flex flex-col items-center justify-center gap-1 py-2 bg-blue-50/50 rounded-xl text-[10px] font-bold text-blue-600 hover:bg-blue-50">
+              <PenLine size={14} /> <span>日記を書く</span>
             </button>
           </div>
         </div>
@@ -238,9 +257,88 @@ export default function App() {
     </div>
   );
 
+  // --- Meeting Search Modal ---
+  const SearchModal = () => (
+    <div className="fixed inset-0 bg-white z-[60] flex flex-col animate-in slide-in-from-bottom duration-300">
+      <header className="px-6 pt-10 pb-4 border-b border-gray-50 flex items-center gap-4">
+        <button 
+          onClick={() => setIsSearchModalOpen(false)}
+          className="p-2 -ml-2 text-gray-400 hover:text-gray-600"
+        >
+          <X size={24} />
+        </button>
+        <div className="flex-1 relative">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input 
+            type="text" 
+            placeholder="会場名、駅名、地域で検索"
+            className="w-full bg-slate-50 border-none rounded-2xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-100 transition-all"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </header>
+
+      <div className="flex-1 overflow-y-auto px-6 py-4">
+        {/* Category Filters */}
+        <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
+          <button className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-full text-xs font-bold whitespace-nowrap shadow-md shadow-blue-100">
+            <Navigation size={14} /> 現在地付近
+          </button>
+          <button className="flex items-center gap-1.5 px-4 py-2 bg-slate-50 text-gray-500 rounded-full text-xs font-bold whitespace-nowrap border border-gray-100">
+            <Globe size={14} /> オンライン
+          </button>
+          <button className="flex items-center gap-1.5 px-4 py-2 bg-slate-50 text-gray-500 rounded-full text-xs font-bold whitespace-nowrap border border-gray-100">
+            <Star size={14} /> お気に入り
+          </button>
+        </div>
+
+        {/* Search Results */}
+        <div className="space-y-4 mt-4">
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">近くの会場</h3>
+          {MOCK_MEETINGS.map(m => (
+            <div key={m.id} className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm hover:border-blue-100 transition-colors group">
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-blue-500 font-black text-xs group-hover:bg-blue-50 transition-colors">{m.type}</div>
+                  <div>
+                    <h4 className="font-bold text-gray-800 text-sm">{m.name}</h4>
+                    <p className="text-[10px] text-gray-400 font-medium">{m.address}</p>
+                  </div>
+                </div>
+                <button className="text-gray-300 hover:text-yellow-400 transition-colors">
+                  <Star size={18} />
+                </button>
+              </div>
+              <div className="flex items-center justify-between mt-4">
+                <div className="flex gap-4">
+                  <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium">
+                    <Clock size={12} className="text-blue-400" /> {m.time}〜
+                  </div>
+                  <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium">
+                    <Navigation size={12} className="text-blue-400" /> {m.distance}
+                  </div>
+                </div>
+                <button 
+                  onClick={() => {
+                    setIsSearchModalOpen(false);
+                    setIsCheckinModalOpen(true);
+                  }}
+                  className="bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-bold hover:bg-blue-600 transition-colors"
+                >
+                  チェックイン
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   const CheckinModal = () => (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 animate-in slide-in-from-bottom duration-300 shadow-2xl">
+    <div className="fixed inset-0 bg-black/60 z-[70] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
+      <div className="bg-white w-full max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 animate-in slide-in-from-bottom duration-300 shadow-2xl relative">
         {!checkinSuccess ? (
           <>
             <div className="w-12 h-1.5 bg-gray-100 rounded-full mx-auto mb-6"></div>
@@ -248,7 +346,7 @@ export default function App() {
             <p className="text-sm text-gray-400 mb-6">現在地から最も近い会場です。</p>
             
             <div className="space-y-3 mb-8">
-              {MOCK_MEETINGS.map(m => (
+              {MOCK_MEETINGS.slice(0, 2).map(m => (
                 <button 
                   key={m.id}
                   onClick={() => setCheckinSuccess(true)}
@@ -313,7 +411,7 @@ export default function App() {
       <header className="bg-white px-6 pt-10 pb-4 sticky top-0 z-10">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-black text-gray-800 tracking-tight">Recoverly</h1>
+            <h1 className="text-2xl font-black text-gray-800 tracking-tight">Recovery Log</h1>
             <p className="text-[10px] text-gray-400 font-bold tracking-tighter uppercase opacity-70">Support your peaceful journey</p>
           </div>
           <div className="flex gap-2">
@@ -364,7 +462,7 @@ export default function App() {
         )}
       </main>
 
-      {/* Floating Action Button - Only on Dashboard/Analytics */}
+      {/* Floating Action Button */}
       {(activeTab === 'dashboard' || activeTab === 'analytics') && (
         <button 
           onClick={() => setIsCheckinModalOpen(true)}
@@ -386,6 +484,7 @@ export default function App() {
 
       {/* Modals */}
       {isCheckinModalOpen && <CheckinModal />}
+      {isSearchModalOpen && <SearchModal />}
       
       <style>{`
         @keyframes fade-in {
@@ -394,6 +493,13 @@ export default function App() {
         }
         .animate-in {
           animation: fade-in 0.4s ease-out forwards;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </div>
