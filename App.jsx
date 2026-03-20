@@ -27,7 +27,8 @@ import {
   Bell,
   ShieldCheck,
   CircleHelp,
-  Mail
+  Mail,
+  Sparkles
 } from 'lucide-react';
 
 // --- モックデータ ---
@@ -38,8 +39,8 @@ const DAILY_QUOTES = [
 ];
 
 const MOCK_SOBRIETY = [
-  { id: 1, target: 'アルコール', startDate: '2023-10-15', color: 'blue' },
-  { id: 2, target: 'ギャンブル', startDate: '2024-01-01', color: 'indigo' },
+  { id: 1, target: 'アルコール', color: 'blue' },
+  { id: 2, target: 'ギャンブル', color: 'indigo' },
 ];
 
 const MOCK_MEETINGS = [
@@ -51,7 +52,7 @@ const MOCK_MEETINGS = [
 const MOCK_CALENDAR_DATA = {
   '2024-03-12': { type: 'completed', title: '渋谷AA' },
   '2024-03-15': { type: 'completed', title: 'オンラインNA' },
-  '2024-03-20': { type: 'upcoming', title: '新宿ステップ' }, // 今日
+  '2024-03-20': { type: 'upcoming', title: '新宿ステップ' }, 
   '2024-03-22': { type: 'upcoming', title: '横浜GA' },
 };
 
@@ -61,13 +62,10 @@ const MOCK_FEED = [
   { id: 3, user: 'リカバリーC', action: '日記更新', time: '5時間前', content: '朝の瞑想が習慣になってきました。', likes: 0 },
 ];
 
-// 日数計算ユーティリティ
-const calculateDays = (dateStr) => {
-  const start = new Date(dateStr);
-  const now = new Date();
-  const diff = now - start;
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
-};
+const RECOMMENDED_MEETINGS = [
+  { id: 201, name: '港区ナイトAA', type: 'AA', match: '92%' },
+  { id: 202, name: 'オンライン・ステップ学習', type: 'Online', match: '85%' },
+];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -76,6 +74,26 @@ export default function App() {
   const [checkinSuccess, setCheckinSuccess] = useState(false);
   const [selectedDate, setSelectedDate] = useState(20);
   const [showProfile, setShowProfile] = useState(false);
+
+  // ソーバーカウント状態 (初期値)
+  const [soberCounts, setSoberCounts] = useState({
+    'アルコール': 156,
+    'ギャンブル': 80
+  });
+  const [lastUpdated, setLastUpdated] = useState({});
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  const handleSoberClick = (target) => {
+    const today = new Date().toDateString();
+    if (lastUpdated[target] === today) return;
+
+    setSoberCounts(prev => ({ ...prev, [target]: prev[target] + 1 }));
+    setLastUpdated(prev => ({ ...prev, [target]: today }));
+    
+    // 祝福アニメーション
+    setShowCelebration(true);
+    setTimeout(() => setShowCelebration(false), 3000);
+  };
 
   // タブボタンコンポーネント
   const TabButton = ({ id, icon: Icon, label }) => (
@@ -118,7 +136,7 @@ export default function App() {
                   <div className={`w-1.5 h-6 rounded-full ${record.color === 'blue' ? 'bg-blue-500' : 'bg-indigo-500'}`} />
                   <div className="text-left">
                     <p className="text-sm font-bold text-gray-800">{record.target}</p>
-                    <p className="text-[10px] text-gray-400 font-medium">{record.startDate} から開始</p>
+                    <p className="text-[10px] text-gray-400 font-medium">目標設定の編集</p>
                   </div>
                 </div>
                 <ChevronRight size={16} className="text-gray-300 group-hover:text-gray-500" />
@@ -160,6 +178,27 @@ export default function App() {
 
   const Dashboard = () => (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10 px-1">
+      {/* 祝福アニメーションオーバーレイ */}
+      {showCelebration && (
+        <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center overflow-hidden">
+          {[...Array(20)].map((_, i) => (
+            <div key={i} className="absolute animate-bounce-slow" style={{ 
+              left: `${Math.random() * 100}%`, 
+              top: `-10%`,
+              animationDelay: `${Math.random() * 2}s`,
+              fontSize: `${Math.random() * 20 + 20}px`
+            }}>
+              {['🎉', '✨', '👏', '🌟', '💪'][Math.floor(Math.random() * 5)]}
+            </div>
+          ))}
+          <div className="bg-white/90 backdrop-blur px-8 py-4 rounded-full shadow-2xl border border-blue-100 animate-in zoom-in">
+            <p className="text-blue-600 font-black text-xl flex items-center gap-2">
+              <Sparkles className="animate-pulse" /> ナイスリカバリー！
+            </p>
+          </div>
+        </div>
+      )}
+
       <section className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-[32px] text-white relative overflow-hidden shadow-xl shadow-blue-100">
         <Quote className="absolute -right-2 -bottom-2 text-white/10 w-24 h-24 rotate-12" />
         <div className="relative z-10">
@@ -175,26 +214,40 @@ export default function App() {
         </div>
       </section>
 
-      {/* ソーバーカウンターを上に移動 */}
+      {/* ソーバーカウンター */}
       <section>
         <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 px-1">ソーバーカウンター</h2>
-        <div className="grid grid-cols-2 gap-3">
-          {MOCK_SOBRIETY.map(record => (
-            <div key={record.id} className="bg-white p-4 rounded-[28px] shadow-sm border border-gray-100 relative overflow-hidden group hover:border-blue-200 transition-all">
-              <div className="absolute top-0 right-0 w-10 h-10 bg-slate-50 rounded-bl-[20px] flex items-center justify-center text-gray-300 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                <ChevronRight size={14} />
+        <div className="grid grid-cols-1 gap-3">
+          {MOCK_SOBRIETY.map(record => {
+            const isTodayDone = lastUpdated[record.target] === new Date().toDateString();
+            return (
+              <div key={record.id} className="bg-white p-5 rounded-[32px] shadow-sm border border-gray-100 flex items-center justify-between group transition-all">
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 mb-1 uppercase tracking-wider">{record.target}</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-black text-gray-800">{soberCounts[record.target]}</span>
+                    <span className="text-[10px] font-bold text-gray-500 uppercase">days</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => handleSoberClick(record.target)}
+                  disabled={isTodayDone}
+                  className={`px-6 py-3 rounded-2xl font-black text-[11px] transition-all flex items-center gap-2 shadow-sm ${
+                    isTodayDone 
+                    ? 'bg-green-50 text-green-600 cursor-default' 
+                    : 'bg-slate-900 text-white active:scale-95 hover:bg-slate-800'
+                  }`}
+                >
+                  {isTodayDone ? <CheckCircle2 size={16} /> : <Plus size={16} />}
+                  {isTodayDone ? '今日も達成' : 'しませんでした'}
+                </button>
               </div>
-              <p className="text-[10px] font-bold text-gray-400 mb-1">{record.target}</p>
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black text-gray-800">{calculateDays(record.startDate)}</span>
-                <span className="text-[10px] font-bold text-gray-500 uppercase">days</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
-      {/* 今日の予定を下へ */}
+      {/* 今日の予定 */}
       <section className="bg-white p-5 rounded-[32px] shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
@@ -236,6 +289,7 @@ export default function App() {
         </div>
       </section>
 
+      {/* アクティビティ */}
       <section className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
@@ -313,7 +367,7 @@ export default function App() {
     </div>
   );
 
-  // 分析コンポーネント (変更なし)
+  // 分析コンポーネント
   const Analytics = () => {
     const radius = 15.9155;
     const circumference = 2 * Math.PI * radius;
@@ -347,13 +401,13 @@ export default function App() {
           </div>
           <div className="bg-white p-5 rounded-[32px] border border-gray-100 shadow-sm relative overflow-hidden group">
             <Award size={40} className="absolute -right-2 -bottom-2 text-indigo-50 opacity-50 group-hover:scale-110 transition-transform" />
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">最長継続</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">現在の継続</p>
             <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-gray-800">156</span>
+              <span className="text-2xl font-black text-gray-800">{soberCounts['アルコール']}</span>
               <span className="text-xs text-gray-500 font-bold">日</span>
             </div>
             <div className="mt-4 text-[10px] text-green-500 font-black flex items-center gap-1">
-              <CheckCircle2 size={12} /> 記録更新中
+              <CheckCircle2 size={12} /> 順調です
             </div>
           </div>
         </div>
@@ -550,12 +604,13 @@ export default function App() {
       {/* 各種モーダル */}
       {isCheckinModalOpen && (
         <div className="fixed inset-0 bg-black/60 z-[70] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 animate-in slide-in-from-bottom duration-300 shadow-2xl relative">
+          <div className="bg-white w-full max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 animate-in slide-in-from-bottom duration-300 shadow-2xl relative max-h-[90vh] overflow-y-auto no-scrollbar">
             {!checkinSuccess ? (
               <>
                 <div className="w-12 h-1.5 bg-gray-100 rounded-full mx-auto mb-6"></div>
                 <h3 className="text-xl font-black mb-2 text-gray-800">会場にチェックイン</h3>
                 <p className="text-sm text-gray-400 mb-8 leading-relaxed">今日もミーティングへの参加、素晴らしい勇気です。あなたの回復をサポートします。</p>
+                
                 <div className="bg-blue-50/50 p-5 rounded-[32px] border border-blue-100 mb-8 flex items-center gap-4">
                   <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 font-black text-sm shadow-sm">AA</div>
                   <div>
@@ -563,6 +618,25 @@ export default function App() {
                     <p className="text-[10px] text-blue-500 font-black uppercase tracking-widest mt-0.5">Start at 19:00</p>
                   </div>
                 </div>
+
+                {/* レコメンドセクション */}
+                <div className="mb-8">
+                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 px-1 flex items-center gap-2">
+                    <Sparkles size={12} className="text-orange-400" /> 他の人はこんなグループにも参加しています
+                  </h4>
+                  <div className="space-y-3">
+                    {RECOMMENDED_MEETINGS.map(item => (
+                      <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-[10px] font-black text-slate-400">{item.type}</div>
+                          <span className="text-xs font-bold text-gray-700">{item.name}</span>
+                        </div>
+                        <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-2 py-1 rounded-lg">マッチ度 {item.match}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="flex flex-col gap-3">
                   <button onClick={() => setCheckinSuccess(true)} className="w-full bg-blue-600 text-white py-4 rounded-[24px] font-black shadow-xl shadow-blue-100 active:scale-95 hover:bg-blue-700 transition-all">
                     チェックインを確定
@@ -635,7 +709,8 @@ export default function App() {
                         <Navigation size={14} className="text-blue-500" /> {m.distance}
                       </div>
                     </div>
-                    <button onClick={() => { setIsSearchModalOpen(false); setIsCheckinModalOpen(true); }} className="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-[10px] font-bold shadow-lg active:scale-95">チェックイン</button>
+                    {/* 文言を「チェックイン」から「詳細」に変更 */}
+                    <button onClick={() => { setIsSearchModalOpen(false); setIsCheckinModalOpen(true); }} className="bg-slate-900 text-white px-8 py-2.5 rounded-2xl text-[10px] font-bold shadow-lg active:scale-95">詳細</button>
                   </div>
                 </div>
               ))}
@@ -653,11 +728,18 @@ export default function App() {
           from { opacity: 0; transform: scale(0.95); }
           to { opacity: 1; transform: scale(1); }
         }
+        @keyframes bounce-slow {
+          0% { transform: translateY(0); }
+          100% { transform: translateY(110vh) rotate(360deg); }
+        }
         .animate-in {
           animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .zoom-in {
           animation: zoom-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-bounce-slow {
+          animation: bounce-slow 3s linear forwards;
         }
         .no-scrollbar::-webkit-scrollbar {
           display: none;
