@@ -12,7 +12,7 @@ import {
   Award,
   ChevronRight,
   Settings,
-  Quote,
+  Quote, 
   BarChart3,
   Search,
   PieChart as PieIcon,
@@ -28,7 +28,9 @@ import {
   ShieldCheck,
   CircleHelp,
   Mail,
-  Sparkles
+  Sparkles,
+  RefreshCw,
+  AlertTriangle
 } from 'lucide-react';
 
 // --- モックデータ ---
@@ -75,13 +77,16 @@ export default function App() {
   const [selectedDate, setSelectedDate] = useState(20);
   const [showProfile, setShowProfile] = useState(false);
 
-  // ソーバーカウント状態 (初期値)
+  // ソーバーカウント状態
   const [soberCounts, setSoberCounts] = useState({
     'アルコール': 156,
     'ギャンブル': 80
   });
   const [lastUpdated, setLastUpdated] = useState({});
   const [showCelebration, setShowCelebration] = useState(false);
+  
+  // リセット用モーダル状態
+  const [resetTarget, setResetTarget] = useState(null);
 
   const handleSoberClick = (target) => {
     const today = new Date().toDateString();
@@ -90,9 +95,24 @@ export default function App() {
     setSoberCounts(prev => ({ ...prev, [target]: prev[target] + 1 }));
     setLastUpdated(prev => ({ ...prev, [target]: today }));
     
-    // 祝福アニメーション
     setShowCelebration(true);
     setTimeout(() => setShowCelebration(false), 3000);
+  };
+
+  const confirmReset = (target) => {
+    setResetTarget(target);
+  };
+
+  const handleReset = () => {
+    if (resetTarget) {
+      setSoberCounts(prev => ({ ...prev, [resetTarget]: 0 }));
+      setLastUpdated(prev => {
+        const newState = { ...prev };
+        delete newState[resetTarget];
+        return newState;
+      });
+      setResetTarget(null);
+    }
   };
 
   // タブボタンコンポーネント
@@ -229,18 +249,26 @@ export default function App() {
                     <span className="text-[10px] font-bold text-gray-500 uppercase">days</span>
                   </div>
                 </div>
-                <button 
-                  onClick={() => handleSoberClick(record.target)}
-                  disabled={isTodayDone}
-                  className={`px-6 py-3 rounded-2xl font-black text-[11px] transition-all flex items-center gap-2 shadow-sm ${
-                    isTodayDone 
-                    ? 'bg-green-50 text-green-600 cursor-default' 
-                    : 'bg-slate-900 text-white active:scale-95 hover:bg-slate-800'
-                  }`}
-                >
-                  {isTodayDone ? <CheckCircle2 size={16} /> : <Plus size={16} />}
-                  {isTodayDone ? '今日も達成' : 'しませんでした'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => confirmReset(record.target)}
+                    className="p-3 bg-slate-50 text-gray-400 rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all border border-transparent hover:border-red-100 shadow-sm"
+                  >
+                    <RefreshCw size={18} />
+                  </button>
+                  <button 
+                    onClick={() => handleSoberClick(record.target)}
+                    disabled={isTodayDone}
+                    className={`px-5 py-3 rounded-2xl font-black text-[11px] transition-all flex items-center gap-2 shadow-sm ${
+                      isTodayDone 
+                      ? 'bg-green-50 text-green-600 cursor-default' 
+                      : 'bg-slate-900 text-white active:scale-95 hover:bg-slate-800'
+                    }`}
+                  >
+                    {isTodayDone ? <CheckCircle2 size={16} /> : <Plus size={16} />}
+                    {isTodayDone ? '今日も達成' : 'しませんでした'}
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -367,130 +395,13 @@ export default function App() {
     </div>
   );
 
-  // 分析コンポーネント
-  const Analytics = () => {
-    const radius = 15.9155;
-    const circumference = 2 * Math.PI * radius;
-    const alcoholPercentage = 70;
-    const gamblingPercentage = 30;
-    const gap = 2; 
-    const alcoholStroke = ((alcoholPercentage - gap) / 100) * circumference;
-    const gamblingStroke = ((gamblingPercentage - gap) / 100) * circumference;
-    
-    return (
-      <div className="space-y-6 animate-in fade-in duration-500 pb-10">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-xl font-black text-gray-800 tracking-tighter">分析レポート</h2>
-          <div className="flex items-center gap-1 bg-white px-3 py-1.5 rounded-full border border-gray-100 shadow-sm">
-            <Calendar size={12} className="text-blue-500" />
-            <span className="text-[10px] font-bold text-gray-500">直近30日間</span>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white p-5 rounded-[32px] border border-gray-100 shadow-sm relative overflow-hidden group">
-            <BarChart3 size={40} className="absolute -right-2 -bottom-2 text-blue-50 opacity-50 group-hover:scale-110 transition-transform" />
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">今月の参加数</p>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-gray-800">12</span>
-              <span className="text-xs text-gray-500 font-bold">回</span>
-            </div>
-            <div className="mt-4 w-full bg-slate-50 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-blue-500 h-full w-[60%] rounded-full"></div>
-            </div>
-          </div>
-          <div className="bg-white p-5 rounded-[32px] border border-gray-100 shadow-sm relative overflow-hidden group">
-            <Award size={40} className="absolute -right-2 -bottom-2 text-indigo-50 opacity-50 group-hover:scale-110 transition-transform" />
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">現在の継続</p>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-gray-800">{soberCounts['アルコール']}</span>
-              <span className="text-xs text-gray-500 font-bold">日</span>
-            </div>
-            <div className="mt-4 text-[10px] text-green-500 font-black flex items-center gap-1">
-              <CheckCircle2 size={12} /> 順調です
-            </div>
-          </div>
-        </div>
-
-        <section className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-              <PieIcon size={20} />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-gray-800 tracking-tight">アディクション別比率</h3>
-              <p className="text-[10px] text-gray-400 font-medium">ミーティング参加の内訳</p>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center">
-            <div className="relative w-44 h-44 mb-8">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                <circle cx="18" cy="18" r={radius} fill="none" className="text-slate-50" stroke="currentColor" strokeWidth="4" />
-                <circle 
-                  cx="18" cy="18" r={radius} fill="none" 
-                  className="text-blue-500" 
-                  stroke="currentColor" 
-                  strokeWidth="4" 
-                  strokeDasharray={`${alcoholStroke} ${circumference - alcoholStroke}`}
-                  strokeLinecap="round"
-                />
-                <circle 
-                  cx="18" cy="18" r={radius} fill="none" 
-                  className="text-indigo-300" 
-                  stroke="currentColor" 
-                  strokeWidth="4" 
-                  strokeDasharray={`${gamblingStroke} ${circumference - gamblingStroke}`}
-                  strokeDashoffset={-((alcoholPercentage / 100) * circumference)}
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest leading-none">合計</span>
-                <span className="text-4xl font-black text-gray-800 tracking-tighter my-1">60</span>
-                <span className="text-[10px] font-bold text-gray-400 uppercase">回</span>
-              </div>
-            </div>
-
-            <div className="w-full grid grid-cols-2 gap-4">
-              <div className="bg-slate-50 p-4 rounded-2xl flex flex-col border border-gray-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
-                  <span className="text-[11px] font-black text-gray-500">アルコール</span>
-                </div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-black text-gray-800">42</span>
-                  <span className="text-[10px] text-gray-400 font-bold">回 (70%)</span>
-                </div>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-2xl flex flex-col border border-gray-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-indigo-300"></div>
-                  <span className="text-[11px] font-black text-gray-500">ギャンブル</span>
-                </div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-black text-gray-800">18</span>
-                  <span className="text-[10px] text-gray-400 font-bold">回 (30%)</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900 font-sans max-w-md mx-auto relative flex flex-col shadow-2xl border-x border-gray-100">
-      {/* 共通ヘッダー */}
       <header className="bg-white/80 backdrop-blur-md px-6 pt-12 pb-4 sticky top-0 z-40 border-b border-gray-50">
         <div className="flex justify-between items-center">
           <div>
             {showProfile ? (
-              <button 
-                onClick={() => setShowProfile(false)}
-                className="flex items-center gap-2 text-gray-400 hover:text-gray-800 transition-colors py-2"
-              >
+              <button onClick={() => setShowProfile(false)} className="flex items-center gap-2 text-gray-400 hover:text-gray-800 transition-colors py-2">
                 <ChevronLeft size={20} />
                 <span className="text-sm font-black tracking-tight">戻る</span>
               </button>
@@ -515,9 +426,7 @@ export default function App() {
             <button 
               onClick={() => setShowProfile(!showProfile)}
               className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-[10px] shadow-lg border-2 transition-all ${
-                showProfile 
-                ? 'bg-slate-100 text-slate-500 border-white rotate-90 scale-90' 
-                : 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white border-white shadow-blue-50'
+                showProfile ? 'bg-slate-100 text-slate-500 border-white rotate-90 scale-90' : 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white border-white shadow-blue-50'
               }`}
             >
               {showProfile ? <X size={20} /> : '匿名'}
@@ -526,14 +435,10 @@ export default function App() {
         </div>
       </header>
 
-      {/* メインコンテンツ */}
       <main className="flex-1 px-5 py-6 pb-28 overflow-y-auto">
-        {showProfile ? (
-          <ProfileView />
-        ) : (
+        {showProfile ? <ProfileView /> : (
           <>
             {activeTab === 'dashboard' && <Dashboard />}
-            
             {activeTab === 'feed' && (
               <div className="space-y-4 animate-in fade-in duration-500">
                 <div className="flex items-center justify-between px-1">
@@ -569,29 +474,41 @@ export default function App() {
                 ))}
               </div>
             )}
-
-            {activeTab === 'analytics' && <Analytics />}
-
+            {activeTab === 'analytics' && (
+              <div className="space-y-6 animate-in fade-in duration-500">
+                <h2 className="text-xl font-black text-gray-800 tracking-tighter px-1">分析レポート</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white p-5 rounded-[32px] border border-gray-100 shadow-sm">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">今月の参加数</p>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-black text-gray-800">12</span>
+                      <span className="text-xs text-gray-500 font-bold">回</span>
+                    </div>
+                  </div>
+                  <div className="bg-white p-5 rounded-[32px] border border-gray-100 shadow-sm">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">現在の継続</p>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-black text-gray-800">{soberCounts['アルコール']}</span>
+                      <span className="text-xs text-gray-500 font-bold">日</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             {activeTab === 'friends' && (
               <div className="flex flex-col items-center justify-center h-[60vh] text-gray-400 px-10 text-center animate-in fade-in zoom-in duration-500">
                 <div className="w-24 h-24 bg-white rounded-[40px] flex items-center justify-center mb-8 shadow-sm border border-gray-100 relative">
                   <Users size={40} className="text-blue-500 opacity-20" />
-                  <div className="absolute top-0 right-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center animate-bounce">
-                    <Plus size={12} className="text-blue-600" />
-                  </div>
                 </div>
                 <h3 className="text-lg font-black text-gray-800 mb-3 tracking-tight">つながりを大切に</h3>
-                <p className="text-xs font-medium leading-relaxed mb-8 opacity-70">フレンド機能は現在準備中です。<br/>回復を支え合う仲間を見つけましょう。</p>
-                <button className="bg-slate-900 text-white px-8 py-3 rounded-2xl text-xs font-black shadow-lg shadow-slate-100">
-                  招待コードを発行する
-                </button>
+                <p className="text-xs font-medium leading-relaxed mb-8 opacity-70">フレンド機能は現在準備中です。</p>
+                <button className="bg-slate-900 text-white px-8 py-3 rounded-2xl text-xs font-black shadow-lg">招待コードを発行する</button>
               </div>
             )}
           </>
         )}
       </main>
 
-      {/* フッターナビゲーション */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-50 px-8 pt-4 pb-8 z-50 max-w-md mx-auto rounded-t-[44px] shadow-[0_-15px_50px_rgba(0,0,0,0.08)]">
         <div className="flex justify-between items-center">
           <TabButton id="dashboard" icon={Clock} label="ホーム" />
@@ -609,7 +526,7 @@ export default function App() {
               <>
                 <div className="w-12 h-1.5 bg-gray-100 rounded-full mx-auto mb-6"></div>
                 <h3 className="text-xl font-black mb-2 text-gray-800">会場にチェックイン</h3>
-                <p className="text-sm text-gray-400 mb-8 leading-relaxed">今日もミーティングへの参加、素晴らしい勇気です。あなたの回復をサポートします。</p>
+                <p className="text-sm text-gray-400 mb-8 leading-relaxed">今日もミーティングへの参加、素晴らしい勇気です。</p>
                 
                 <div className="bg-blue-50/50 p-5 rounded-[32px] border border-blue-100 mb-8 flex items-center gap-4">
                   <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 font-black text-sm shadow-sm">AA</div>
@@ -619,7 +536,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* レコメンドセクション */}
                 <div className="mb-8">
                   <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 px-1 flex items-center gap-2">
                     <Sparkles size={12} className="text-orange-400" /> 他の人はこんなグループにも参加しています
@@ -638,27 +554,17 @@ export default function App() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <button onClick={() => setCheckinSuccess(true)} className="w-full bg-blue-600 text-white py-4 rounded-[24px] font-black shadow-xl shadow-blue-100 active:scale-95 hover:bg-blue-700 transition-all">
-                    チェックインを確定
-                  </button>
-                  <button onClick={() => setIsCheckinModalOpen(false)} className="w-full py-4 text-gray-400 text-xs font-black uppercase tracking-widest">
-                    キャンセル
-                  </button>
+                  <button onClick={() => setCheckinSuccess(true)} className="w-full bg-blue-600 text-white py-4 rounded-[24px] font-black shadow-xl">チェックインを確定</button>
+                  <button onClick={() => setIsCheckinModalOpen(false)} className="w-full py-4 text-gray-400 text-xs font-black tracking-widest uppercase">キャンセル</button>
                 </div>
               </>
             ) : (
-              <div className="text-center py-10 animate-in zoom-in duration-500">
+              <div className="text-center py-10 animate-in zoom-in">
                 <div className="w-24 h-24 bg-green-50 rounded-[40px] flex items-center justify-center mx-auto mb-6 shadow-sm border border-green-100">
                   <CheckCircle2 size={48} className="text-green-500" />
                 </div>
-                <h3 className="text-2xl font-black mb-2 text-gray-800 tracking-tighter">完了しました！</h3>
-                <p className="text-sm text-gray-400 mb-8 leading-relaxed px-4">記録はカレンダーに保存されました。一歩ずつ、今日一日を大切に進んでいきましょう。</p>
-                <button 
-                  onClick={() => { setIsCheckinModalOpen(false); setCheckinSuccess(false); }}
-                  className="w-full bg-slate-900 text-white py-4 rounded-[24px] font-black shadow-lg shadow-slate-100"
-                >
-                  ホームへ戻る
-                </button>
+                <h3 className="text-2xl font-black mb-2 text-gray-800">完了しました！</h3>
+                <button onClick={() => { setIsCheckinModalOpen(false); setCheckinSuccess(false); }} className="w-full bg-slate-900 text-white py-4 rounded-[24px] font-black shadow-lg">ホームへ戻る</button>
               </div>
             )}
           </div>
@@ -668,28 +574,16 @@ export default function App() {
       {isSearchModalOpen && (
         <div className="fixed inset-0 bg-white z-[60] flex flex-col animate-in slide-in-from-bottom duration-300">
           <header className="px-6 pt-12 pb-4 border-b border-gray-50 flex items-center gap-4">
-            <button onClick={() => setIsSearchModalOpen(false)} className="p-2 -ml-2 text-gray-400 hover:text-gray-600">
-              <X size={24} />
-            </button>
+            <button onClick={() => setIsSearchModalOpen(false)} className="p-2 -ml-2 text-gray-400 hover:text-gray-600"><X size={24} /></button>
             <div className="flex-1 relative">
               <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input autoFocus type="text" placeholder="会場、駅名、地域名で検索" className="w-full bg-slate-50 border-none rounded-2xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-100 transition-all font-medium" />
+              <input autoFocus type="text" placeholder="会場を検索" className="w-full bg-slate-50 border-none rounded-2xl py-3 pl-11 pr-4 text-sm font-medium" />
             </div>
           </header>
           <div className="flex-1 overflow-y-auto px-6 py-4">
-            <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
-              {['現在地付近', 'オンライン', 'お気に入り', 'AA', 'NA', 'GA'].map((cat, i) => (
-                <button key={cat} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-black whitespace-nowrap border transition-all ${
-                  i === 0 ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100' : 'bg-white text-gray-500 border-gray-100 hover:border-blue-200'
-                }`}>
-                  {cat}
-                </button>
-              ))}
-            </div>
             <div className="space-y-4 mt-6">
-              <h3 className="text-[10px] font-black text-gray-300 uppercase tracking-widest px-1">近くの会場 (3件)</h3>
               {MOCK_MEETINGS.map(m => (
-                <div key={m.id} className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm hover:border-blue-200 transition-all group">
+                <div key={m.id} className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm transition-all group">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-blue-600 font-black text-sm group-hover:bg-blue-50 transition-colors shadow-sm">{m.type}</div>
@@ -698,19 +592,12 @@ export default function App() {
                         <p className="text-[10px] text-gray-400 font-medium mt-1">{m.address}</p>
                       </div>
                     </div>
-                    <button className="text-gray-200 hover:text-yellow-400 transition-colors"><Star size={20} /></button>
                   </div>
                   <div className="flex items-center justify-between mt-2">
                     <div className="flex gap-4">
-                      <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-bold">
-                        <Clock size={14} className="text-blue-500" /> {m.time}〜
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-bold">
-                        <Navigation size={14} className="text-blue-500" /> {m.distance}
-                      </div>
+                      <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-bold"><Clock size={14} className="text-blue-500" /> {m.time}〜</div>
                     </div>
-                    {/* 文言を「チェックイン」から「詳細」に変更 */}
-                    <button onClick={() => { setIsSearchModalOpen(false); setIsCheckinModalOpen(true); }} className="bg-slate-900 text-white px-8 py-2.5 rounded-2xl text-[10px] font-bold shadow-lg active:scale-95">詳細</button>
+                    <button onClick={() => { setIsSearchModalOpen(false); setIsCheckinModalOpen(true); }} className="bg-slate-900 text-white px-8 py-2.5 rounded-2xl text-[10px] font-bold shadow-lg">詳細</button>
                   </div>
                 </div>
               ))}
@@ -718,42 +605,48 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* リセット確認モーダル */}
+      {resetTarget && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-6 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-sm rounded-[40px] p-8 animate-in zoom-in shadow-2xl text-center border border-white">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <AlertTriangle size={32} />
+            </div>
+            <h3 className="text-xl font-black text-gray-800 mb-2 tracking-tighter">
+              {resetTarget}ソーバーをリセットしますか？
+            </h3>
+            <p className="text-sm text-gray-400 leading-relaxed mb-8 px-2 font-medium">
+              この操作は取り消せません。今日までの {soberCounts[resetTarget]} 日間の記録がリセットされます。
+            </p>
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={handleReset} 
+                className="w-full bg-red-500 text-white py-4 rounded-[24px] font-black shadow-xl shadow-red-100 hover:bg-red-600 transition-colors"
+              >
+                リセットする
+              </button>
+              <button 
+                onClick={() => setResetTarget(null)} 
+                className="w-full py-4 text-gray-400 text-xs font-black tracking-widest uppercase hover:bg-slate-50 rounded-[24px]"
+              >
+                やめる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(12px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes zoom-in {
-          from { opacity: 0; transform: scale(0.95); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes bounce-slow {
-          0% { transform: translateY(0); }
-          100% { transform: translateY(110vh) rotate(360deg); }
-        }
-        .animate-in {
-          animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .zoom-in {
-          animation: zoom-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .animate-bounce-slow {
-          animation: bounce-slow 3s linear forwards;
-        }
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        input:focus {
-          outline: none;
-        }
-        main {
-          -webkit-overflow-scrolling: touch;
-        }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes zoom-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes bounce-slow { 0% { transform: translateY(0); } 100% { transform: translateY(110vh) rotate(360deg); } }
+        .animate-in { animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .zoom-in { animation: zoom-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-bounce-slow { animation: bounce-slow 3s linear forwards; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        input:focus { outline: none; }
       `}</style>
     </div>
   );
