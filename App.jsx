@@ -175,6 +175,26 @@ export default function App() {
         </div>
       </section>
 
+      {/* ソーバーカウンターを上に移動 */}
+      <section>
+        <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 px-1">ソーバーカウンター</h2>
+        <div className="grid grid-cols-2 gap-3">
+          {MOCK_SOBRIETY.map(record => (
+            <div key={record.id} className="bg-white p-4 rounded-[28px] shadow-sm border border-gray-100 relative overflow-hidden group hover:border-blue-200 transition-all">
+              <div className="absolute top-0 right-0 w-10 h-10 bg-slate-50 rounded-bl-[20px] flex items-center justify-center text-gray-300 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <ChevronRight size={14} />
+              </div>
+              <p className="text-[10px] font-bold text-gray-400 mb-1">{record.target}</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-black text-gray-800">{calculateDays(record.startDate)}</span>
+                <span className="text-[10px] font-bold text-gray-500 uppercase">days</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 今日の予定を下へ */}
       <section className="bg-white p-5 rounded-[32px] shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
@@ -213,24 +233,6 @@ export default function App() {
           <button className="flex flex-col items-center justify-center gap-1.5 py-3 bg-blue-50/30 border border-blue-100/50 rounded-2xl text-[10px] font-bold text-blue-600 hover:bg-blue-50 transition-colors">
             <PenLine size={14} /> <span>日記を書く</span>
           </button>
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 px-1">ソーバーカウンター</h2>
-        <div className="grid grid-cols-2 gap-3">
-          {MOCK_SOBRIETY.map(record => (
-            <div key={record.id} className="bg-white p-4 rounded-[28px] shadow-sm border border-gray-100 relative overflow-hidden group hover:border-blue-200 transition-all">
-              <div className="absolute top-0 right-0 w-10 h-10 bg-slate-50 rounded-bl-[20px] flex items-center justify-center text-gray-300 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                <ChevronRight size={14} />
-              </div>
-              <p className="text-[10px] font-bold text-gray-400 mb-1">{record.target}</p>
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black text-gray-800">{calculateDays(record.startDate)}</span>
-                <span className="text-[10px] font-bold text-gray-500 uppercase">days</span>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
@@ -311,13 +313,12 @@ export default function App() {
     </div>
   );
 
-  // 分析コンポーネント
+  // 分析コンポーネント (変更なし)
   const Analytics = () => {
     const radius = 15.9155;
     const circumference = 2 * Math.PI * radius;
     const alcoholPercentage = 70;
     const gamblingPercentage = 30;
-    
     const gap = 2; 
     const alcoholStroke = ((alcoholPercentage - gap) / 100) * circumference;
     const gamblingStroke = ((gamblingPercentage - gap) / 100) * circumference;
@@ -441,7 +442,7 @@ export default function App() {
               </button>
             ) : (
               <>
-                <h1 className="text-2xl font-black text-gray-800 tracking-tighter flex items-center gap-1.5">
+                <h1 className="text-2xl font-black text-gray-800 tracking-tighter flex items-center gap-0">
                   <span className="text-blue-600">Rec</span>overly
                 </h1>
                 <div className="flex items-center gap-1.5">
@@ -546,7 +547,7 @@ export default function App() {
         </div>
       </nav>
 
-      {/* 各種モーダル (Profile表示中も動作可能にするため最前面へ) */}
+      {/* 各種モーダル */}
       {isCheckinModalOpen && (
         <div className="fixed inset-0 bg-black/60 z-[70] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white w-full max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 animate-in slide-in-from-bottom duration-300 shadow-2xl relative">
