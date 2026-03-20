@@ -30,7 +30,8 @@ import {
   Mail,
   Sparkles,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  Sun
 } from 'lucide-react';
 
 // --- モックデータ ---
@@ -85,6 +86,8 @@ export default function App() {
   });
   const [lastUpdated, setLastUpdated] = useState({});
   const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationMessage, setCelebrationMessage] = useState("");
+  const [celebrationTarget, setCelebrationTarget] = useState("");
   
   // リセット用モーダル状態
   const [resetTarget, setResetTarget] = useState(null);
@@ -96,8 +99,9 @@ export default function App() {
     setSoberCounts(prev => ({ ...prev, [target]: prev[target] + 1 }));
     setLastUpdated(prev => ({ ...prev, [target]: today }));
     
+    setCelebrationTarget(target);
+    setCelebrationMessage(`おめでとうございます！！\n今日も一日、${target}しない日を過ごせましたね！`);
     setShowCelebration(true);
-    setTimeout(() => setShowCelebration(false), 3000);
   };
 
   const confirmReset = (target) => {
@@ -129,6 +133,42 @@ export default function App() {
       </div>
       <span className="text-[10px] mt-1 font-bold">{label}</span>
     </button>
+  );
+
+  // 祝福画面コンポーネント
+  const CelebrationScreen = () => (
+    <div className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center p-8 animate-in zoom-in duration-500 text-center">
+      <div className="mb-8 relative">
+        <div className="w-32 h-32 bg-yellow-50 rounded-[48px] flex items-center justify-center text-yellow-500 animate-pulse">
+          <Sun size={64} strokeWidth={1.5} />
+        </div>
+        <div className="absolute -top-4 -right-4 w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 animate-bounce">
+          <Sparkles size={24} />
+        </div>
+      </div>
+      
+      <h2 className="text-2xl font-black text-gray-800 mb-6 leading-relaxed whitespace-pre-wrap tracking-tighter">
+        {celebrationMessage}
+      </h2>
+      
+      <div className="flex gap-2 mb-12">
+        {[...Array(5)].map((_, i) => (
+          <Star key={i} size={20} className="text-yellow-400 fill-yellow-400 animate-bounce" style={{ animationDelay: `${i * 0.1}s` }} />
+        ))}
+      </div>
+
+      <div className="w-full max-w-xs space-y-4">
+        <button 
+          onClick={() => setShowCelebration(false)}
+          className="w-full bg-slate-900 text-white py-5 rounded-[28px] font-black shadow-xl shadow-slate-200 active:scale-95 transition-transform"
+        >
+          明日もしません
+        </button>
+        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+          One day at a time
+        </p>
+      </div>
+    </div>
   );
 
   // プロフィール画面コンポーネント
@@ -199,27 +239,6 @@ export default function App() {
 
   const Dashboard = () => (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10 px-1">
-      {/* 祝福アニメーションオーバーレイ */}
-      {showCelebration && (
-        <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center overflow-hidden">
-          {[...Array(20)].map((_, i) => (
-            <div key={i} className="absolute animate-bounce-slow" style={{ 
-              left: `${Math.random() * 100}%`, 
-              top: `-10%`,
-              animationDelay: `${Math.random() * 2}s`,
-              fontSize: `${Math.random() * 20 + 20}px`
-            }}>
-              {['🎉', '✨', '👏', '🌟', '💪'][Math.floor(Math.random() * 5)]}
-            </div>
-          ))}
-          <div className="bg-white/90 backdrop-blur px-8 py-4 rounded-full shadow-2xl border border-blue-100 animate-in zoom-in">
-            <p className="text-blue-600 font-black text-xl flex items-center gap-2">
-              <Sparkles className="animate-pulse" /> ナイスリカバリー！
-            </p>
-          </div>
-        </div>
-      )}
-
       <section className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-[32px] text-white relative overflow-hidden shadow-xl shadow-blue-100">
         <Quote className="absolute -right-2 -bottom-2 text-white/10 w-24 h-24 rotate-12" />
         <div className="relative z-10">
@@ -398,6 +417,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900 font-sans max-w-md mx-auto relative flex flex-col shadow-2xl border-x border-gray-100">
+      {/* フルスクリーン祝福画面 */}
+      {showCelebration && <CelebrationScreen />}
+
       <header className="bg-white/80 backdrop-blur-md px-6 pt-12 pb-4 sticky top-0 z-40 border-b border-gray-50">
         <div className="flex justify-between items-center">
           <div>
@@ -716,10 +738,8 @@ export default function App() {
       <style>{`
         @keyframes fade-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes zoom-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        @keyframes bounce-slow { 0% { transform: translateY(0); } 100% { transform: translateY(110vh) rotate(360deg); } }
         .animate-in { animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .zoom-in { animation: zoom-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .animate-bounce-slow { animation: bounce-slow 3s linear forwards; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         input:focus { outline: none; }
