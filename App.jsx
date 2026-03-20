@@ -24,7 +24,7 @@ import {
   ChevronLeft
 } from 'lucide-react';
 
-// --- Mock Data ---
+// --- モックデータ ---
 const DAILY_QUOTES = [
   { text: "今日一日、私たちは静穏を求めて歩みます。", source: "12ステップの知恵" },
   { text: "変えられないものを受け入れる平静さを。", source: "ニーバーの祈り" },
@@ -32,8 +32,8 @@ const DAILY_QUOTES = [
 ];
 
 const MOCK_SOBRIETY = [
-  { id: 1, target: 'アルコール', startDate: '2023-10-15' },
-  { id: 2, target: 'ギャンブル', startDate: '2024-01-01' },
+  { id: 1, target: 'アルコール', startDate: '2023-10-15', color: 'blue' },
+  { id: 2, target: 'ギャンブル', startDate: '2024-01-01', color: 'indigo' },
 ];
 
 const MOCK_MEETINGS = [
@@ -42,7 +42,6 @@ const MOCK_MEETINGS = [
   { id: 103, name: '池袋GA日曜', time: '14:00', distance: '3.5km', type: 'GA', address: '東京都豊島区...', status: 'upcoming' },
 ];
 
-// カレンダー用モックデータ (履歴と予定)
 const MOCK_CALENDAR_DATA = {
   '2024-03-12': { type: 'completed', title: '渋谷AA' },
   '2024-03-15': { type: 'completed', title: 'オンラインNA' },
@@ -53,8 +52,10 @@ const MOCK_CALENDAR_DATA = {
 const MOCK_FEED = [
   { id: 1, user: '匿名A', action: 'ミーティング参加', time: '1時間前', content: '今日はステップ3について分かち合いました。少し心が軽くなった気がします。', likes: 2 },
   { id: 2, user: '仲間B', action: '30日達成', time: '3時間前', content: '静かな一日を過ごせています。仲間の支えに感謝します。', likes: 5 },
+  { id: 3, user: 'リカバリーC', action: '日記更新', time: '5時間前', content: '朝の瞑想が習慣になってきました。', likes: 0 },
 ];
 
+// 日数計算ユーティリティ
 const calculateDays = (dateStr) => {
   const start = new Date(dateStr);
   const now = new Date();
@@ -69,25 +70,29 @@ export default function App() {
   const [checkinSuccess, setCheckinSuccess] = useState(false);
   const [selectedDate, setSelectedDate] = useState(20);
 
+  // タブボタンコンポーネント
   const TabButton = ({ id, icon: Icon, label }) => (
     <button 
       onClick={() => setActiveTab(id)}
-      className={`flex flex-col items-center justify-center w-full py-2 transition-colors ${
-        activeTab === id ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
+      className={`flex flex-col items-center justify-center w-full py-2 transition-all duration-300 ${
+        activeTab === id ? 'text-blue-600 scale-110' : 'text-gray-400 hover:text-gray-600'
       }`}
     >
-      <Icon size={20} />
-      <span className="text-[10px] mt-1 font-medium">{label}</span>
+      <div className={`p-1 rounded-lg ${activeTab === id ? 'bg-blue-50' : ''}`}>
+        <Icon size={22} />
+      </div>
+      <span className="text-[10px] mt-1 font-bold">{label}</span>
     </button>
   );
 
+  // ダッシュボードコンポーネント
   const Dashboard = () => (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
-      {/* 1. Daily Quote */}
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10 px-1">
+      {/* 1. デイリー・クオート */}
       <section className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-[32px] text-white relative overflow-hidden shadow-xl shadow-blue-100">
         <Quote className="absolute -right-2 -bottom-2 text-white/10 w-24 h-24 rotate-12" />
         <div className="relative z-10">
-          <p className="text-sm font-medium leading-relaxed italic mb-3 opacity-90">
+          <p className="text-base font-medium leading-relaxed italic mb-3 opacity-95">
             「一度に一つずつ。一歩ずつ（One Day at a Time）」
           </p>
           <div className="flex items-center gap-2">
@@ -99,7 +104,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* 2. Today's Meeting */}
+      {/* 2. 今日の予定 & クイックアクション */}
       <section className="bg-white p-5 rounded-[32px] shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
@@ -109,9 +114,9 @@ export default function App() {
           <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">1件の予定</span>
         </div>
         
-        <div className="bg-slate-50 p-4 rounded-2xl mb-4 flex items-center justify-between">
+        <div className="bg-slate-50 p-4 rounded-2xl mb-4 flex items-center justify-between group hover:bg-slate-100 transition-colors">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-blue-600 font-black text-xs shadow-sm">AA</div>
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-blue-600 font-black text-xs shadow-sm group-hover:scale-105 transition-transform">AA</div>
             <div>
               <p className="font-bold text-gray-800 text-xs">渋谷木曜グループ</p>
               <p className="text-[10px] text-gray-400 font-medium">19:00〜 / 150m先</p>
@@ -141,26 +146,26 @@ export default function App() {
         </div>
       </section>
 
-      {/* 3. Sobriety Counters */}
-      <section className="px-1">
-        <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">ソーバーカウンター</h2>
+      {/* 3. ソーバーカウンター */}
+      <section>
+        <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 px-1">ソーバーカウンター</h2>
         <div className="grid grid-cols-2 gap-3">
           {MOCK_SOBRIETY.map(record => (
-            <div key={record.id} className="bg-white p-4 rounded-[28px] shadow-sm border border-gray-100 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-12 h-12 bg-blue-50/50 rounded-bl-[28px] flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors">
+            <div key={record.id} className="bg-white p-4 rounded-[28px] shadow-sm border border-gray-100 relative overflow-hidden group hover:border-blue-200 transition-all">
+              <div className="absolute top-0 right-0 w-10 h-10 bg-slate-50 rounded-bl-[20px] flex items-center justify-center text-gray-300 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                 <ChevronRight size={14} />
               </div>
               <p className="text-[10px] font-bold text-gray-400 mb-1">{record.target}</p>
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-black text-gray-800">{calculateDays(record.startDate)}</span>
-                <span className="text-[10px] font-bold text-gray-500">days</span>
+                <span className="text-[10px] font-bold text-gray-500 uppercase">days</span>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* 4. Activity Calendar */}
+      {/* 4. カレンダーセクション */}
       <section className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
@@ -169,7 +174,7 @@ export default function App() {
             </div>
             <div>
               <h2 className="text-sm font-bold text-gray-800">アクティビティ</h2>
-              <p className="text-[10px] text-gray-400 font-medium">履歴と予定の確認</p>
+              <p className="text-[10px] text-gray-400 font-medium">履歴と予定</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -194,7 +199,7 @@ export default function App() {
                 key={i} 
                 onClick={() => setSelectedDate(day)}
                 className={`aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all ${
-                  isSelected ? 'bg-blue-600 text-white shadow-lg shadow-blue-100 scale-105 z-10' : 'hover:bg-slate-50'
+                  isSelected ? 'bg-blue-600 text-white shadow-lg shadow-blue-100 scale-110 z-10' : 'hover:bg-slate-50'
                 }`}
               >
                 <span className={`text-[11px] font-bold ${isSelected ? 'text-white' : 'text-gray-500'}`}>{day}</span>
@@ -211,12 +216,12 @@ export default function App() {
         <div className="border-t border-gray-50 pt-5">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">3月 {selectedDate}日の詳細</h3>
-            <button className="text-[10px] font-bold text-blue-600">+ 予定を追加</button>
+            <button className="text-[10px] font-bold text-blue-600 hover:underline">+ 予定を追加</button>
           </div>
           
           {MOCK_CALENDAR_DATA[`2024-03-${selectedDate.toString().padStart(2, '0')}`] ? (
             <div className="flex items-center gap-4 bg-slate-50/50 p-3 rounded-2xl animate-in fade-in slide-in-from-top-1">
-              <div className={`w-2 h-10 rounded-full ${
+              <div className={`w-1.5 h-8 rounded-full ${
                 MOCK_CALENDAR_DATA[`2024-03-${selectedDate.toString().padStart(2, '0')}`].type === 'completed' ? 'bg-green-400' : 'bg-blue-400'
               }`} />
               <div>
@@ -224,13 +229,13 @@ export default function App() {
                   {MOCK_CALENDAR_DATA[`2024-03-${selectedDate.toString().padStart(2, '0')}`].title} ミーティング
                 </p>
                 <p className="text-[10px] text-gray-400 font-medium">
-                  {MOCK_CALENDAR_DATA[`2024-03-${selectedDate.toString().padStart(2, '0')}`].type === 'completed' ? '実績: 参加済み' : '予定: 19:00〜'}
+                  {MOCK_CALENDAR_DATA[`2024-03-${selectedDate.toString().padStart(2, '0')}`].type === 'completed' ? '完了' : '19:00〜'}
                 </p>
               </div>
             </div>
           ) : (
-            <div className="text-center py-4 bg-slate-50/30 rounded-2xl border border-dashed border-gray-100">
-              <p className="text-[10px] text-gray-400 font-medium">記録や予定はありません</p>
+            <div className="text-center py-6 bg-slate-50/30 rounded-2xl border border-dashed border-gray-100">
+              <p className="text-[10px] text-gray-400 font-medium italic">この日の記録はありません</p>
             </div>
           )}
         </div>
@@ -238,112 +243,110 @@ export default function App() {
     </div>
   );
 
+  // 分析コンポーネント
   const Analytics = () => {
-    // 円グラフ計算
     const radius = 15.9155;
     const circumference = 2 * Math.PI * radius;
     const alcoholPercentage = 70;
     const gamblingPercentage = 30;
     
-    // セグメント間にギャップを作るための調整
-    const gap = 2; // 隙間のサイズ
+    const gap = 2; 
     const alcoholStroke = ((alcoholPercentage - gap) / 100) * circumference;
     const gamblingStroke = ((gamblingPercentage - gap) / 100) * circumference;
     
     return (
       <div className="space-y-6 animate-in fade-in duration-500 pb-10">
-        <h2 className="text-xl font-bold text-gray-800 px-1">分析レポート</h2>
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-xl font-black text-gray-800 tracking-tighter">分析レポート</h2>
+          <div className="flex items-center gap-1 bg-white px-3 py-1.5 rounded-full border border-gray-100 shadow-sm">
+            <Calendar size={12} className="text-blue-500" />
+            <span className="text-[10px] font-bold text-gray-500">直近30日間</span>
+          </div>
+        </div>
         
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white p-5 rounded-[28px] border border-gray-100 shadow-sm">
+          <div className="bg-white p-5 rounded-[32px] border border-gray-100 shadow-sm relative overflow-hidden group">
+            <BarChart3 size={40} className="absolute -right-2 -bottom-2 text-blue-50 opacity-50 group-hover:scale-110 transition-transform" />
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">今月の参加数</p>
             <div className="flex items-baseline gap-1">
               <span className="text-2xl font-black text-gray-800">12</span>
               <span className="text-xs text-gray-500 font-bold">回</span>
             </div>
-            <div className="mt-3 w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-blue-500 h-full w-[60%]"></div>
+            <div className="mt-4 w-full bg-slate-50 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-blue-500 h-full w-[60%] rounded-full"></div>
             </div>
           </div>
-          <div className="bg-white p-5 rounded-[28px] border border-gray-100 shadow-sm">
+          <div className="bg-white p-5 rounded-[32px] border border-gray-100 shadow-sm relative overflow-hidden group">
+            <Award size={40} className="absolute -right-2 -bottom-2 text-indigo-50 opacity-50 group-hover:scale-110 transition-transform" />
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">最長継続</p>
             <div className="flex items-baseline gap-1">
               <span className="text-2xl font-black text-gray-800">156</span>
               <span className="text-xs text-gray-500 font-bold">日</span>
             </div>
-            <div className="mt-3 text-[10px] text-green-500 font-bold flex items-center gap-1">
-              <Award size={10} /> 記録更新中
+            <div className="mt-4 text-[10px] text-green-500 font-black flex items-center gap-1">
+              <CheckCircle2 size={12} /> 記録更新中
             </div>
           </div>
         </div>
 
-        {/* Improved Pie Chart Section */}
         <section className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600">
-              <PieIcon size={18} />
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+              <PieIcon size={20} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-gray-800">アディクション別比率</h3>
-              <p className="text-[10px] text-gray-400 font-medium">今月のアクティビティ内訳</p>
+              <h3 className="text-sm font-bold text-gray-800 tracking-tight">アディクション別比率</h3>
+              <p className="text-[10px] text-gray-400 font-medium">ミーティング参加の内訳</p>
             </div>
           </div>
 
           <div className="flex flex-col items-center">
-            <div className="relative w-48 h-48 mb-8">
+            <div className="relative w-44 h-44 mb-8">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                {/* Background Circle */}
-                <circle cx="18" cy="18" r={radius} fill="none" className="text-slate-50" stroke="currentColor" strokeWidth="3.5" />
-                
-                {/* Alcohol Segment */}
+                <circle cx="18" cy="18" r={radius} fill="none" className="text-slate-50" stroke="currentColor" strokeWidth="4" />
                 <circle 
                   cx="18" cy="18" r={radius} fill="none" 
                   className="text-blue-500" 
                   stroke="currentColor" 
-                  strokeWidth="3.5" 
+                  strokeWidth="4" 
                   strokeDasharray={`${alcoholStroke} ${circumference - alcoholStroke}`}
                   strokeLinecap="round"
                 />
-                
-                {/* Gambling Segment */}
                 <circle 
                   cx="18" cy="18" r={radius} fill="none" 
                   className="text-indigo-300" 
                   stroke="currentColor" 
-                  strokeWidth="3.5" 
+                  strokeWidth="4" 
                   strokeDasharray={`${gamblingStroke} ${circumference - gamblingStroke}`}
                   strokeDashoffset={-((alcoholPercentage / 100) * circumference)}
                   strokeLinecap="round"
                 />
               </svg>
-              
-              {/* Center Text */}
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Total</span>
-                <span className="text-3xl font-black text-gray-800 tracking-tighter">60</span>
-                <span className="text-[10px] font-bold text-gray-400 uppercase">Times</span>
+                <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest leading-none">合計</span>
+                <span className="text-4xl font-black text-gray-800 tracking-tighter my-1">60</span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase">回</span>
               </div>
             </div>
 
-            {/* Legend Cards */}
-            <div className="w-full grid grid-cols-2 gap-3">
-              <div className="bg-slate-50 p-4 rounded-2xl flex flex-col gap-1">
-                <div className="flex items-center gap-2 mb-1">
+            <div className="w-full grid grid-cols-2 gap-4">
+              <div className="bg-slate-50 p-4 rounded-2xl flex flex-col border border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
                   <span className="text-[11px] font-black text-gray-500">アルコール</span>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-black text-gray-800">42</span>
+                  <span className="text-xl font-black text-gray-800">42</span>
                   <span className="text-[10px] text-gray-400 font-bold">回 (70%)</span>
                 </div>
               </div>
-              <div className="bg-slate-50 p-4 rounded-2xl flex flex-col gap-1">
-                <div className="flex items-center gap-2 mb-1">
+              <div className="bg-slate-50 p-4 rounded-2xl flex flex-col border border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-indigo-300"></div>
                   <span className="text-[11px] font-black text-gray-500">ギャンブル</span>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-black text-gray-800">18</span>
+                  <span className="text-xl font-black text-gray-800">18</span>
                   <span className="text-[10px] text-gray-400 font-bold">回 (30%)</span>
                 </div>
               </div>
@@ -354,6 +357,7 @@ export default function App() {
     );
   };
 
+  // 会場検索モーダル
   const SearchModal = () => (
     <div className="fixed inset-0 bg-white z-[60] flex flex-col animate-in slide-in-from-bottom duration-300">
       <header className="px-6 pt-12 pb-4 border-b border-gray-50 flex items-center gap-4">
@@ -363,9 +367,10 @@ export default function App() {
         <div className="flex-1 relative">
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
           <input 
+            autoFocus
             type="text" 
-            placeholder="会場名、駅名、地域で検索"
-            className="w-full bg-slate-50 border-none rounded-2xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-100 transition-all"
+            placeholder="会場、駅名、地域名で検索"
+            className="w-full bg-slate-50 border-none rounded-2xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-100 transition-all font-medium"
           />
         </div>
       </header>
@@ -373,8 +378,8 @@ export default function App() {
       <div className="flex-1 overflow-y-auto px-6 py-4">
         <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
           {['現在地付近', 'オンライン', 'お気に入り', 'AA', 'NA', 'GA'].map((cat, i) => (
-            <button key={cat} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap border ${
-              i === 0 ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : 'bg-white text-gray-500 border-gray-100'
+            <button key={cat} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-black whitespace-nowrap border transition-all ${
+              i === 0 ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100' : 'bg-white text-gray-500 border-gray-100 hover:border-blue-200'
             }`}>
               {cat}
             </button>
@@ -387,15 +392,15 @@ export default function App() {
             <div key={m.id} className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm hover:border-blue-200 transition-all group">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-blue-600 font-black text-sm group-hover:bg-blue-50 transition-colors">{m.type}</div>
+                  <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-blue-600 font-black text-sm group-hover:bg-blue-50 transition-colors shadow-sm">{m.type}</div>
                   <div>
-                    <h4 className="font-bold text-gray-800 text-sm">{m.name}</h4>
-                    <p className="text-[10px] text-gray-400 font-medium">{m.address}</p>
+                    <h4 className="font-bold text-gray-800 text-sm leading-tight">{m.name}</h4>
+                    <p className="text-[10px] text-gray-400 font-medium mt-1">{m.address}</p>
                   </div>
                 </div>
-                <button className="text-gray-200 hover:text-yellow-400"><Star size={20} /></button>
+                <button className="text-gray-200 hover:text-yellow-400 transition-colors"><Star size={20} /></button>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mt-2">
                 <div className="flex gap-4">
                   <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-bold">
                     <Clock size={14} className="text-blue-500" /> {m.time}〜
@@ -406,7 +411,7 @@ export default function App() {
                 </div>
                 <button 
                   onClick={() => { setIsSearchModalOpen(false); setIsCheckinModalOpen(true); }}
-                  className="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-[10px] font-bold hover:bg-blue-600 transition-colors shadow-lg shadow-slate-200"
+                  className="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-[10px] font-bold hover:bg-blue-600 transition-colors shadow-lg shadow-slate-100 active:scale-95"
                 >
                   チェックイン
                 </button>
@@ -418,6 +423,7 @@ export default function App() {
     </div>
   );
 
+  // チェックインモーダル
   const CheckinModal = () => (
     <div className="fixed inset-0 bg-black/60 z-[70] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm">
       <div className="bg-white w-full max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 animate-in slide-in-from-bottom duration-300 shadow-2xl relative">
@@ -425,35 +431,35 @@ export default function App() {
           <>
             <div className="w-12 h-1.5 bg-gray-100 rounded-full mx-auto mb-6"></div>
             <h3 className="text-xl font-black mb-2 text-gray-800">会場にチェックイン</h3>
-            <p className="text-sm text-gray-400 mb-8 leading-relaxed">今日もミーティングへの参加、素晴らしい勇気です。</p>
+            <p className="text-sm text-gray-400 mb-8 leading-relaxed">今日もミーティングへの参加、素晴らしい勇気です。あなたの回復をサポートします。</p>
             
             <div className="bg-blue-50/50 p-5 rounded-[32px] border border-blue-100 mb-8 flex items-center gap-4">
               <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 font-black text-sm shadow-sm">AA</div>
               <div>
-                <p className="font-bold text-gray-800 text-sm">{MOCK_MEETINGS[0].name}</p>
-                <p className="text-xs text-blue-400 font-bold">19:00 開始</p>
+                <p className="font-bold text-gray-800 text-sm">渋谷木曜グループ</p>
+                <p className="text-[10px] text-blue-500 font-black uppercase tracking-widest mt-0.5">Start at 19:00</p>
               </div>
             </div>
             
             <div className="flex flex-col gap-3">
-              <button onClick={() => setCheckinSuccess(true)} className="w-full bg-blue-600 text-white py-4 rounded-[20px] font-black shadow-xl shadow-blue-100 active:scale-95 transition-all">
+              <button onClick={() => setCheckinSuccess(true)} className="w-full bg-blue-600 text-white py-4 rounded-[24px] font-black shadow-xl shadow-blue-100 active:scale-95 hover:bg-blue-700 transition-all">
                 チェックインを確定
               </button>
-              <button onClick={() => setIsCheckinModalOpen(false)} className="w-full py-4 text-gray-400 text-xs font-bold uppercase tracking-widest">
+              <button onClick={() => setIsCheckinModalOpen(false)} className="w-full py-4 text-gray-400 text-xs font-black uppercase tracking-widest">
                 キャンセル
               </button>
             </div>
           </>
         ) : (
-          <div className="text-center py-10">
-            <div className="w-20 h-20 bg-green-50 rounded-[30px] flex items-center justify-center mx-auto mb-6 shadow-sm border border-green-100">
-              <CheckCircle2 size={40} className="text-green-500" />
+          <div className="text-center py-10 animate-in zoom-in duration-500">
+            <div className="w-24 h-24 bg-green-50 rounded-[40px] flex items-center justify-center mx-auto mb-6 shadow-sm border border-green-100">
+              <CheckCircle2 size={48} className="text-green-500" />
             </div>
-            <h3 className="text-2xl font-black mb-2 text-gray-800">完了しました</h3>
-            <p className="text-sm text-gray-400 mb-8 leading-relaxed px-4">記録はカレンダーに保存されました。一歩ずつ、進んでいきましょう。</p>
+            <h3 className="text-2xl font-black mb-2 text-gray-800 tracking-tighter">完了しました！</h3>
+            <p className="text-sm text-gray-400 mb-8 leading-relaxed px-4">記録はカレンダーに保存されました。一歩ずつ、今日一日を大切に進んでいきましょう。</p>
             <button 
               onClick={() => { setIsCheckinModalOpen(false); setCheckinSuccess(false); }}
-              className="w-full bg-slate-900 text-white py-4 rounded-[20px] font-black"
+              className="w-full bg-slate-900 text-white py-4 rounded-[24px] font-black shadow-lg shadow-slate-100"
             >
               ホームへ戻る
             </button>
@@ -464,63 +470,92 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 text-gray-900 font-sans max-w-md mx-auto relative flex flex-col shadow-2xl">
-      <header className="bg-white/80 backdrop-blur-md px-6 pt-12 pb-4 sticky top-0 z-40">
+    <div className="min-h-screen bg-slate-50 text-gray-900 font-sans max-w-md mx-auto relative flex flex-col shadow-2xl border-x border-gray-100">
+      {/* 共通ヘッダー */}
+      <header className="bg-white/80 backdrop-blur-md px-6 pt-12 pb-4 sticky top-0 z-40 border-b border-gray-50">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-black text-gray-800 tracking-tighter">Recoverly</h1>
+            <h1 className="text-2xl font-black text-gray-800 tracking-tighter flex items-center gap-1.5">
+              <span className="text-blue-600">Rec</span>overly
+            </h1>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
               <p className="text-[9px] text-gray-400 font-black tracking-widest uppercase">One day at a time</p>
             </div>
           </div>
           <div className="flex gap-2">
-            <button className="p-2.5 text-gray-400 bg-slate-50 rounded-xl hover:text-gray-600 transition-colors"><Settings size={18} /></button>
-            <div className="w-9 h-9 bg-gradient-to-tr from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center text-white font-black text-xs shadow-md">匿名</div>
+            <button className="p-2.5 text-gray-400 bg-slate-50 rounded-xl hover:text-gray-600 transition-colors">
+              <Settings size={18} />
+            </button>
+            <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-[10px] shadow-lg shadow-blue-50 border-2 border-white">
+              匿名
+            </div>
           </div>
         </div>
       </header>
 
+      {/* メインコンテンツ */}
       <main className="flex-1 px-5 py-6 pb-28 overflow-y-auto">
         {activeTab === 'dashboard' && <Dashboard />}
+        
         {activeTab === 'feed' && (
           <div className="space-y-4 animate-in fade-in duration-500">
-            <h2 className="text-xl font-bold text-gray-800 px-1">タイムライン</h2>
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-xl font-black text-gray-800 tracking-tighter">タイムライン</h2>
+              <button className="p-2 bg-blue-50 text-blue-600 rounded-full"><Plus size={20} /></button>
+            </div>
             {MOCK_FEED.map(item => (
-              <div key={item.id} className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
+              <div key={item.id} className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 hover:border-blue-100 transition-all">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-[10px] font-bold text-gray-400">匿名</div>
+                    <div className="w-10 h-10 bg-slate-100 rounded-2xl flex items-center justify-center text-[10px] font-bold text-gray-400">
+                      <User size={18} />
+                    </div>
                     <div>
                       <p className="text-xs font-black text-gray-800">{item.user}</p>
                       <p className="text-[10px] text-gray-400 font-medium">{item.time}</p>
                     </div>
                   </div>
-                  <span className="text-[9px] bg-blue-50 px-2 py-1 rounded-full text-blue-600 font-black uppercase tracking-wider">{item.action}</span>
+                  <span className="text-[9px] bg-blue-50 px-2.5 py-1 rounded-full text-blue-600 font-black uppercase tracking-wider">{item.action}</span>
                 </div>
                 <p className="text-sm text-gray-600 leading-relaxed mb-4">{item.content}</p>
-                <button className="flex items-center gap-2 text-gray-400 hover:text-red-400 transition-colors">
-                  <Heart size={18} fill={item.likes > 0 ? "currentColor" : "none"} className={item.likes > 0 ? "text-red-400" : ""} />
-                  <span className="text-[11px] font-black">{item.likes > 0 ? `${item.likes}人が共感` : '共感する'}</span>
-                </button>
+                <div className="flex items-center gap-4">
+                  <button className="flex items-center gap-1.5 text-gray-400 hover:text-red-400 transition-colors group">
+                    <Heart size={18} fill={item.likes > 0 ? "currentColor" : "none"} className={item.likes > 0 ? "text-red-400" : "group-hover:scale-110 transition-transform"} />
+                    <span className="text-[11px] font-bold">{item.likes > 0 ? `${item.likes}人が共感` : '共感する'}</span>
+                  </button>
+                  <button className="flex items-center gap-1.5 text-gray-400 hover:text-blue-400 transition-colors">
+                    <MessageSquare size={16} />
+                    <span className="text-[11px] font-bold">コメント</span>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
+
         {activeTab === 'analytics' && <Analytics />}
+
         {activeTab === 'friends' && (
-          <div className="flex flex-col items-center justify-center h-80 text-gray-400 px-10 text-center">
-            <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center mb-6 shadow-sm border border-gray-100">
+          <div className="flex flex-col items-center justify-center h-[60vh] text-gray-400 px-10 text-center animate-in fade-in zoom-in duration-500">
+            <div className="w-24 h-24 bg-white rounded-[40px] flex items-center justify-center mb-8 shadow-sm border border-gray-100 relative">
               <Users size={40} className="text-blue-500 opacity-20" />
+              <div className="absolute top-0 right-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center animate-bounce">
+                <Plus size={12} className="text-blue-600" />
+              </div>
             </div>
-            <h3 className="text-lg font-bold text-gray-800 mb-2">つながりを大切に</h3>
-            <p className="text-xs font-medium leading-relaxed">フレンド機能は準備中です。回復を支え合う仲間を見つけましょう。</p>
+            <h3 className="text-lg font-black text-gray-800 mb-3 tracking-tight">つながりを大切に</h3>
+            <p className="text-xs font-medium leading-relaxed mb-8 opacity-70">フレンド機能は現在準備中です。<br/>回復を支え合う仲間を見つけましょう。</p>
+            <button className="bg-slate-900 text-white px-8 py-3 rounded-2xl text-xs font-black shadow-lg shadow-slate-100">
+              招待コードを発行する
+            </button>
           </div>
         )}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 px-8 py-4 z-50 max-w-md mx-auto rounded-t-[40px] shadow-[0_-15px_50px_rgba(0,0,0,0.06)]">
-        <div className="flex justify-between items-end">
+      {/* フッターナビゲーション */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-50 px-8 pt-4 pb-8 z-50 max-w-md mx-auto rounded-t-[44px] shadow-[0_-15px_50px_rgba(0,0,0,0.08)]">
+        <div className="flex justify-between items-center">
           <TabButton id="dashboard" icon={Clock} label="ホーム" />
           <TabButton id="feed" icon={MessageSquare} label="タイムライン" />
           <TabButton id="analytics" icon={BarChart3} label="分析" />
@@ -528,16 +563,24 @@ export default function App() {
         </div>
       </nav>
 
+      {/* 各種モーダル */}
       {isCheckinModalOpen && <CheckinModal />}
       {isSearchModalOpen && <SearchModal />}
       
       <style>{`
         @keyframes fade-in {
-          from { opacity: 0; transform: translateY(10px); }
+          from { opacity: 0; transform: translateY(12px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes zoom-in {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
         .animate-in {
-          animation: fade-in 0.4s ease-out forwards;
+          animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .zoom-in {
+          animation: zoom-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .no-scrollbar::-webkit-scrollbar {
           display: none;
@@ -548,6 +591,10 @@ export default function App() {
         }
         input:focus {
           outline: none;
+        }
+        /* iOS モメンタムスクロール */
+        main {
+          -webkit-overflow-scrolling: touch;
         }
       `}</style>
     </div>
