@@ -20,33 +20,35 @@ import {
   Navigation,
   Globe,
   Star,
-  PenLine
+  PenLine,
+  ChevronLeft
 } from 'lucide-react';
 
-// --- Mock Data: Daily Quotes ---
+// --- Mock Data ---
 const DAILY_QUOTES = [
   { text: "今日一日、私たちは静穏を求めて歩みます。", source: "12ステップの知恵" },
   { text: "変えられないものを受け入れる平静さを。", source: "ニーバーの祈り" },
   { text: "一度に一つずつ。一歩ずつ（One Day at a Time）", source: "AAの伝統" },
-  { text: "進歩であり、完璧ではありません。", source: "ステップの歩み" }
 ];
 
-// --- Mock Data ---
 const MOCK_SOBRIETY = [
-  { id: 1, target: 'アルコール', startDate: '2023-10-15', type: 'addiction', count: 42 },
-  { id: 2, target: 'ギャンブル', startDate: '2024-01-01', type: 'addiction', count: 18 },
+  { id: 1, target: 'アルコール', startDate: '2023-10-15' },
+  { id: 2, target: 'ギャンブル', startDate: '2024-01-01' },
 ];
 
 const MOCK_MEETINGS = [
-  { id: 101, name: '渋谷木曜AAグループ', time: '19:00', distance: '150m', type: 'AA', address: '東京都渋谷区...' },
-  { id: 102, name: '新宿NAステップ', time: '18:30', distance: '1.2km', type: 'NA', address: '東京都新宿区...' },
-  { id: 103, name: '池袋GA日曜', time: '14:00', distance: '3.5km', type: 'GA', address: '東京都豊島区...' },
+  { id: 101, name: '渋谷木曜AAグループ', time: '19:00', distance: '150m', type: 'AA', address: '東京都渋谷区...', status: 'upcoming' },
+  { id: 102, name: '新宿NAステップ', time: '18:30', distance: '1.2km', type: 'NA', address: '東京都新宿区...', status: 'completed' },
+  { id: 103, name: '池袋GA日曜', time: '14:00', distance: '3.5km', type: 'GA', address: '東京都豊島区...', status: 'upcoming' },
 ];
 
-const MOCK_FEED = [
-  { id: 1, user: '匿名A', action: 'ミーティングに参加しました', time: '1時間前', content: '今日はステップ3について分かち合いました。', likes: 2 },
-  { id: 2, user: '仲間B', action: '30日間の継続を達成', time: '3時間前', content: '静かな一日を過ごせています。', likes: 5 },
-];
+// カレンダー用モックデータ (履歴と予定)
+const MOCK_CALENDAR_DATA = {
+  '2024-03-12': { type: 'completed', title: '渋谷AA' },
+  '2024-03-15': { type: 'completed', title: 'オンラインNA' },
+  '2024-03-20': { type: 'upcoming', title: '新宿ステップ' }, // 今日
+  '2024-03-22': { type: 'upcoming', title: '横浜GA' },
+};
 
 const calculateDays = (dateStr) => {
   const start = new Date(dateStr);
@@ -60,13 +62,7 @@ export default function App() {
   const [isCheckinModalOpen, setIsCheckinModalOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [checkinSuccess, setCheckinSuccess] = useState(false);
-  const [dailyQuote, setDailyQuote] = useState(DAILY_QUOTES[0]);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    const randomIndex = Math.floor(Math.random() * DAILY_QUOTES.length);
-    setDailyQuote(DAILY_QUOTES[randomIndex]);
-  }, []);
+  const [selectedDate, setSelectedDate] = useState(20); // 3月20日を選択状態
 
   const TabButton = ({ id, icon: Icon, label }) => (
     <button 
@@ -81,89 +77,159 @@ export default function App() {
   );
 
   const Dashboard = () => (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      {/* 1. Daily Quote Section */}
-      <section className="bg-gradient-to-br from-slate-50 to-blue-50 p-6 rounded-3xl border border-blue-100 relative overflow-hidden">
-        <Quote className="absolute -right-2 -bottom-2 text-blue-100/50 w-24 h-24 rotate-12" />
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
+      {/* 1. Daily Quote */}
+      <section className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-[32px] text-white relative overflow-hidden shadow-xl shadow-blue-100">
+        <Quote className="absolute -right-2 -bottom-2 text-white/10 w-24 h-24 rotate-12" />
         <div className="relative z-10">
-          <p className="text-blue-800 text-sm font-medium leading-relaxed italic mb-2">
-            「{dailyQuote.text}」
+          <p className="text-sm font-medium leading-relaxed italic mb-3 opacity-90">
+            「一度に一つずつ。一歩ずつ（One Day at a Time）」
           </p>
-          <p className="text-blue-400 text-[10px] font-bold tracking-widest uppercase">
-            — {dailyQuote.source}
-          </p>
+          <div className="flex items-center gap-2">
+            <div className="h-[1px] w-4 bg-white/50"></div>
+            <p className="text-[10px] font-bold tracking-widest uppercase opacity-70">
+              Recovery Wisdom
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* 2. Quick Check-in/Today's Meeting */}
-      <section className="space-y-3">
-        <div className="flex justify-between items-center px-1">
-          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <MapPin size={18} className="text-blue-500" />
-            今日のミーティング
+      {/* 2. Today's Meeting & Action Box */}
+      <section className="bg-white p-5 rounded-[32px] shadow-sm border border-gray-100">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+            <MapPin size={16} className="text-blue-500" />
+            今日の予定
           </h2>
-          <button 
-            onClick={() => setIsSearchModalOpen(true)}
-            className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded-lg"
-          >
-            他を探す
-          </button>
+          <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">1件の予定</span>
         </div>
         
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-blue-100">AA</div>
-              <div>
-                <p className="font-bold text-gray-800 text-sm">{MOCK_MEETINGS[0].name}</p>
-                <p className="text-[11px] text-gray-400">本日 {MOCK_MEETINGS[0].time}〜 / 約{MOCK_MEETINGS[0].distance}</p>
-              </div>
+        <div className="bg-slate-50 p-4 rounded-2xl mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-blue-600 font-black text-xs shadow-sm">AA</div>
+            <div>
+              <p className="font-bold text-gray-800 text-xs">渋谷木曜グループ</p>
+              <p className="text-[10px] text-gray-400 font-medium">19:00〜 / 150m先</p>
             </div>
-            <button 
-              onClick={() => setIsCheckinModalOpen(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors shadow-md shadow-blue-100"
-            >
-              チェックイン
-            </button>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <button className="flex flex-col items-center justify-center gap-1 py-2 bg-gray-50 rounded-xl text-[10px] font-medium text-gray-500 hover:bg-gray-100">
-              <Plus size={14} /> <span>手動登録</span>
-            </button>
-            <button 
-              onClick={() => setIsSearchModalOpen(true)}
-              className="flex flex-col items-center justify-center gap-1 py-2 bg-gray-50 rounded-xl text-[10px] font-medium text-gray-500 hover:bg-gray-100"
-            >
-              <Search size={14} /> <span>会場検索</span>
-            </button>
-            <button className="flex flex-col items-center justify-center gap-1 py-2 bg-blue-50/50 rounded-xl text-[10px] font-bold text-blue-600 hover:bg-blue-50">
-              <PenLine size={14} /> <span>日記を書く</span>
-            </button>
-          </div>
+          <button 
+            onClick={() => setIsCheckinModalOpen(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-bold shadow-md shadow-blue-100 active:scale-95 transition-transform"
+          >
+            チェックイン
+          </button>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <button className="flex flex-col items-center justify-center gap-1.5 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-bold text-gray-500 hover:bg-slate-50 transition-colors">
+            <Plus size={14} className="text-blue-500" /> <span>手動登録</span>
+          </button>
+          <button 
+            onClick={() => setIsSearchModalOpen(true)}
+            className="flex flex-col items-center justify-center gap-1.5 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-bold text-gray-500 hover:bg-slate-50 transition-colors"
+          >
+            <Search size={14} className="text-blue-500" /> <span>会場検索</span>
+          </button>
+          <button className="flex flex-col items-center justify-center gap-1.5 py-3 bg-blue-50/30 border border-blue-100/50 rounded-2xl text-[10px] font-bold text-blue-600 hover:bg-blue-50 transition-colors">
+            <PenLine size={14} /> <span>日記を書く</span>
+          </button>
         </div>
       </section>
 
       {/* 3. Sobriety Counters */}
-      <section>
-        <h2 className="text-lg font-bold text-gray-800 mb-3 px-1">ソーバーカウンター</h2>
-        <div className="grid grid-cols-1 gap-3">
+      <section className="px-1">
+        <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">ソーバーカウンター</h2>
+        <div className="grid grid-cols-2 gap-3">
           {MOCK_SOBRIETY.map(record => (
-            <div key={record.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center group hover:border-blue-200 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className="bg-blue-50 w-12 h-12 rounded-2xl flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                  <Clock className="text-blue-500" size={24} />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 font-medium">{record.target}</p>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-gray-800 tracking-tight">{calculateDays(record.startDate)}</span>
-                    <span className="text-xs text-gray-500 font-medium">days</span>
-                  </div>
-                </div>
+            <div key={record.id} className="bg-white p-4 rounded-[28px] shadow-sm border border-gray-100 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-12 h-12 bg-blue-50/50 rounded-bl-[28px] flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                <ChevronRight size={14} />
               </div>
-              <ChevronRight size={16} className="text-gray-300" />
+              <p className="text-[10px] font-bold text-gray-400 mb-1">{record.target}</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-black text-gray-800">{calculateDays(record.startDate)}</span>
+                <span className="text-[10px] font-bold text-gray-500">days</span>
+              </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* 4. Activity Calendar (Integrated History & Future) */}
+      <section className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600">
+              <Calendar size={18} />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-gray-800">アクティビティ</h2>
+              <p className="text-[10px] text-gray-400 font-medium">履歴と予定の確認</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="p-1 text-gray-300 hover:text-gray-600"><ChevronLeft size={18} /></button>
+            <span className="text-xs font-bold text-gray-700">3月</span>
+            <button className="p-1 text-gray-300 hover:text-gray-600"><ChevronRight size={18} /></button>
+          </div>
+        </div>
+
+        {/* Calendar Grid */}
+        <div className="grid grid-cols-7 gap-1 mb-6">
+          {['月','火','水','木','金','土','日'].map(d => (
+            <div key={d} className="text-[10px] text-center font-bold text-gray-300 pb-2">{d}</div>
+          ))}
+          {[...Array(31)].map((_, i) => {
+            const day = i + 1;
+            const dateStr = `2024-03-${day.toString().padStart(2, '0')}`;
+            const data = MOCK_CALENDAR_DATA[dateStr];
+            const isSelected = selectedDate === day;
+            
+            return (
+              <button 
+                key={i} 
+                onClick={() => setSelectedDate(day)}
+                className={`aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all ${
+                  isSelected ? 'bg-blue-600 text-white shadow-lg shadow-blue-100 scale-105 z-10' : 'hover:bg-slate-50'
+                }`}
+              >
+                <span className={`text-[11px] font-bold ${isSelected ? 'text-white' : 'text-gray-500'}`}>{day}</span>
+                {data && (
+                  <div className={`w-1 h-1 rounded-full mt-0.5 ${
+                    data.type === 'completed' ? (isSelected ? 'bg-white' : 'bg-green-500') : (isSelected ? 'bg-blue-200' : 'bg-blue-500')
+                  }`} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Detail View for Selected Date */}
+        <div className="border-t border-gray-50 pt-5 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">3月 {selectedDate}日の詳細</h3>
+            <button className="text-[10px] font-bold text-blue-600">+ 予定を追加</button>
+          </div>
+          
+          {MOCK_CALENDAR_DATA[`2024-03-${selectedDate.toString().padStart(2, '0')}`] ? (
+            <div className="flex items-center gap-4 bg-slate-50/50 p-3 rounded-2xl">
+              <div className={`w-2 h-10 rounded-full ${
+                MOCK_CALENDAR_DATA[`2024-03-${selectedDate.toString().padStart(2, '0')}`].type === 'completed' ? 'bg-green-400' : 'bg-blue-400'
+              }`} />
+              <div>
+                <p className="text-xs font-bold text-gray-800">
+                  {MOCK_CALENDAR_DATA[`2024-03-${selectedDate.toString().padStart(2, '0')}`].title} ミーティング
+                </p>
+                <p className="text-[10px] text-gray-400 font-medium">
+                  {MOCK_CALENDAR_DATA[`2024-03-${selectedDate.toString().padStart(2, '0')}`].type === 'completed' ? '実績: 参加済み' : '予定: 19:00〜'}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-4 bg-slate-50/30 rounded-2xl border border-dashed border-gray-100">
+              <p className="text-[10px] text-gray-400 font-medium">記録や予定はありません</p>
+            </div>
+          )}
         </div>
       </section>
     </div>
@@ -173,98 +239,70 @@ export default function App() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <h2 className="text-xl font-bold text-gray-800 px-1">分析レポート</h2>
       
-      {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="bg-white p-5 rounded-[28px] border border-gray-100 shadow-sm">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">今月の参加数</p>
           <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold text-gray-800">12</span>
-            <span className="text-xs text-gray-500">回</span>
+            <span className="text-2xl font-black text-gray-800">12</span>
+            <span className="text-xs text-gray-500 font-bold">回</span>
           </div>
-          <div className="mt-2 w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+          <div className="mt-3 w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
             <div className="bg-blue-500 h-full w-[60%]"></div>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="bg-white p-5 rounded-[28px] border border-gray-100 shadow-sm">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">最長継続</p>
           <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold text-gray-800">156</span>
-            <span className="text-xs text-gray-500">日</span>
+            <span className="text-2xl font-black text-gray-800">156</span>
+            <span className="text-xs text-gray-500 font-bold">日</span>
           </div>
-          <div className="mt-2 text-[10px] text-green-500 font-bold flex items-center gap-1">
+          <div className="mt-3 text-[10px] text-green-500 font-bold flex items-center gap-1">
             <Award size={10} /> 記録更新中
           </div>
         </div>
       </div>
 
-      {/* Addiction Distribution (Visual Mockup) */}
-      <section className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
-        <h3 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+      <section className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
+        <h3 className="text-sm font-bold text-gray-700 mb-6 flex items-center gap-2">
           <PieIcon size={16} className="text-indigo-500" />
           アディクション別比率
         </h3>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-8">
           <div className="relative w-24 h-24">
             <svg className="w-full h-full" viewBox="0 0 36 36">
-              <circle cx="18" cy="18" r="16" fill="none" className="text-blue-500" stroke="currentColor" strokeWidth="4" strokeDasharray="70 100" />
-              <circle cx="18" cy="18" r="16" fill="none" className="text-indigo-400" stroke="currentColor" strokeWidth="4" strokeDasharray="30 100" strokeDashoffset="-70" />
+              <circle cx="18" cy="18" r="16" fill="none" className="text-blue-500" stroke="currentColor" strokeWidth="5" strokeDasharray="70 100" strokeLinecap="round" />
+              <circle cx="18" cy="18" r="16" fill="none" className="text-indigo-300" stroke="currentColor" strokeWidth="5" strokeDasharray="30 100" strokeDashoffset="-70" strokeLinecap="round" />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center flex-col">
-              <span className="text-xs font-bold text-gray-800">TOTAL</span>
-              <span className="text-[10px] text-gray-400 font-bold">60</span>
+              <span className="text-[10px] font-black text-gray-800">TOTAL</span>
+              <span className="text-[12px] text-blue-600 font-black">60</span>
             </div>
           </div>
-          <div className="flex-1 space-y-3">
-            <div className="flex items-center justify-between text-xs">
-              <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500"></div> アルコール</span>
-              <span className="font-bold">42回</span>
+          <div className="flex-1 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                <span className="text-xs font-bold text-gray-600">アルコール</span>
+              </div>
+              <span className="text-xs font-black text-gray-800">70%</span>
             </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-400"></div> ギャンブル</span>
-              <span className="font-bold">18回</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-indigo-300"></div>
+                <span className="text-xs font-bold text-gray-600">ギャンブル</span>
+              </div>
+              <span className="text-xs font-black text-gray-800">30%</span>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Calendar Section */}
-      <section className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-            <Calendar size={16} className="text-blue-500" />
-            アクティビティ
-          </h3>
-          <span className="text-[10px] text-gray-400 font-bold">2024年3月</span>
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {['月','火','水','木','金','土','日'].map(d => (
-            <div key={d} className="text-[10px] text-center font-bold text-gray-300 py-1">{d}</div>
-          ))}
-          {[...Array(31)].map((_, i) => (
-            <div 
-              key={i} 
-              className={`aspect-square rounded-lg flex items-center justify-center text-[10px] font-bold ${
-                [2, 5, 8, 12, 15, 19, 22].includes(i) 
-                ? 'bg-blue-500 text-white shadow-sm' 
-                : 'bg-slate-50 text-gray-400'
-              }`}
-            >
-              {i + 1}
-            </div>
-          ))}
         </div>
       </section>
     </div>
   );
 
-  // --- Meeting Search Modal ---
   const SearchModal = () => (
     <div className="fixed inset-0 bg-white z-[60] flex flex-col animate-in slide-in-from-bottom duration-300">
-      <header className="px-6 pt-10 pb-4 border-b border-gray-50 flex items-center gap-4">
-        <button 
-          onClick={() => setIsSearchModalOpen(false)}
-          className="p-2 -ml-2 text-gray-400 hover:text-gray-600"
-        >
+      <header className="px-6 pt-12 pb-4 border-b border-gray-50 flex items-center gap-4">
+        <button onClick={() => setIsSearchModalOpen(false)} className="p-2 -ml-2 text-gray-400 hover:text-gray-600">
           <X size={24} />
         </button>
         <div className="flex-1 relative">
@@ -273,58 +311,47 @@ export default function App() {
             type="text" 
             placeholder="会場名、駅名、地域で検索"
             className="w-full bg-slate-50 border-none rounded-2xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-100 transition-all"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </header>
 
       <div className="flex-1 overflow-y-auto px-6 py-4">
-        {/* Category Filters */}
         <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
-          <button className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-full text-xs font-bold whitespace-nowrap shadow-md shadow-blue-100">
-            <Navigation size={14} /> 現在地付近
-          </button>
-          <button className="flex items-center gap-1.5 px-4 py-2 bg-slate-50 text-gray-500 rounded-full text-xs font-bold whitespace-nowrap border border-gray-100">
-            <Globe size={14} /> オンライン
-          </button>
-          <button className="flex items-center gap-1.5 px-4 py-2 bg-slate-50 text-gray-500 rounded-full text-xs font-bold whitespace-nowrap border border-gray-100">
-            <Star size={14} /> お気に入り
-          </button>
+          {['現在地付近', 'オンライン', 'お気に入り', 'AA', 'NA', 'GA'].map((cat, i) => (
+            <button key={cat} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap border ${
+              i === 0 ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : 'bg-white text-gray-500 border-gray-100'
+            }`}>
+              {cat}
+            </button>
+          ))}
         </div>
 
-        {/* Search Results */}
-        <div className="space-y-4 mt-4">
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">近くの会場</h3>
+        <div className="space-y-4 mt-6">
+          <h3 className="text-[10px] font-black text-gray-300 uppercase tracking-widest px-1">近くの会場 (3件)</h3>
           {MOCK_MEETINGS.map(m => (
-            <div key={m.id} className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm hover:border-blue-100 transition-colors group">
-              <div className="flex justify-between items-start mb-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-blue-500 font-black text-xs group-hover:bg-blue-50 transition-colors">{m.type}</div>
+            <div key={m.id} className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm hover:border-blue-200 transition-all group">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-blue-600 font-black text-sm group-hover:bg-blue-50 transition-colors">{m.type}</div>
                   <div>
                     <h4 className="font-bold text-gray-800 text-sm">{m.name}</h4>
                     <p className="text-[10px] text-gray-400 font-medium">{m.address}</p>
                   </div>
                 </div>
-                <button className="text-gray-300 hover:text-yellow-400 transition-colors">
-                  <Star size={18} />
-                </button>
+                <button className="text-gray-200 hover:text-yellow-400"><Star size={20} /></button>
               </div>
-              <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center justify-between">
                 <div className="flex gap-4">
-                  <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium">
-                    <Clock size={12} className="text-blue-400" /> {m.time}〜
+                  <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-bold">
+                    <Clock size={14} className="text-blue-500" /> {m.time}〜
                   </div>
-                  <div className="flex items-center gap-1 text-[11px] text-gray-500 font-medium">
-                    <Navigation size={12} className="text-blue-400" /> {m.distance}
+                  <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-bold">
+                    <Navigation size={14} className="text-blue-500" /> {m.distance}
                   </div>
                 </div>
                 <button 
-                  onClick={() => {
-                    setIsSearchModalOpen(false);
-                    setIsCheckinModalOpen(true);
-                  }}
-                  className="bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-bold hover:bg-blue-600 transition-colors"
+                  onClick={() => { setIsSearchModalOpen(false); setIsCheckinModalOpen(true); }}
+                  className="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-[10px] font-bold hover:bg-blue-600 transition-colors shadow-lg shadow-slate-200"
                 >
                   チェックイン
                 </button>
@@ -343,62 +370,38 @@ export default function App() {
           <>
             <div className="w-12 h-1.5 bg-gray-100 rounded-full mx-auto mb-6"></div>
             <h3 className="text-xl font-black mb-2 text-gray-800">会場にチェックイン</h3>
-            <p className="text-sm text-gray-400 mb-6">現在地から最も近い会場です。</p>
+            <p className="text-sm text-gray-400 mb-8 leading-relaxed">今日もミーティングへの参加、素晴らしい勇気です。現在の場所にチェックインしますか？</p>
             
-            <div className="space-y-3 mb-8">
-              {MOCK_MEETINGS.slice(0, 2).map(m => (
-                <button 
-                  key={m.id}
-                  onClick={() => setCheckinSuccess(true)}
-                  className="w-full flex items-center justify-between p-5 bg-slate-50 rounded-3xl hover:bg-blue-50 transition-all border border-transparent hover:border-blue-100 group"
-                >
-                  <div className="text-left flex items-center gap-4">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-blue-500 font-bold text-xs shadow-sm">{m.type}</div>
-                    <div>
-                      <p className="font-bold text-gray-800 text-sm">{m.name}</p>
-                      <p className="text-xs text-gray-400 font-medium">{m.time} 開始予定</p>
-                    </div>
-                  </div>
-                  <ChevronRight size={18} className="text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
-                </button>
-              ))}
+            <div className="bg-blue-50/50 p-5 rounded-[32px] border border-blue-100 mb-8 flex items-center gap-4">
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 font-black text-sm shadow-sm">AA</div>
+              <div>
+                <p className="font-bold text-gray-800 text-sm">{MOCK_MEETINGS[0].name}</p>
+                <p className="text-xs text-blue-400 font-bold">19:00 開始</p>
+              </div>
             </div>
             
-            <button 
-              onClick={() => setIsCheckinModalOpen(false)}
-              className="w-full py-4 text-gray-400 text-sm font-bold uppercase tracking-widest"
-            >
-              今は閉じる
-            </button>
+            <div className="flex flex-col gap-3">
+              <button onClick={() => setCheckinSuccess(true)} className="w-full bg-blue-600 text-white py-4 rounded-[20px] font-black shadow-xl shadow-blue-100 active:scale-95 transition-all">
+                チェックインを確定
+              </button>
+              <button onClick={() => setIsCheckinModalOpen(false)} className="w-full py-4 text-gray-400 text-xs font-bold uppercase tracking-widest">
+                キャンセル
+              </button>
+            </div>
           </>
         ) : (
-          <div className="text-center py-8">
-            <div className="w-20 h-20 bg-green-50 rounded-[30px] flex items-center justify-center mx-auto mb-6 shadow-sm">
+          <div className="text-center py-10">
+            <div className="w-20 h-20 bg-green-50 rounded-[30px] flex items-center justify-center mx-auto mb-6 shadow-sm border border-green-100">
               <CheckCircle2 size={40} className="text-green-500" />
             </div>
-            <h3 className="text-2xl font-black mb-2 text-gray-800">お疲れ様でした</h3>
-            <p className="text-sm text-gray-400 mb-8 leading-relaxed px-4">今日も一歩、回復への道を進みましたね。<br/>今の気持ちを言葉にしてみませんか？</p>
-            <div className="flex flex-col gap-3">
-              <button 
-                onClick={() => {
-                  setIsCheckinModalOpen(false);
-                  setCheckinSuccess(false);
-                  setActiveTab('analytics');
-                }}
-                className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-xl shadow-blue-100 active:scale-95 transition-all"
-              >
-                日記を書く
-              </button>
-              <button 
-                onClick={() => {
-                  setIsCheckinModalOpen(false);
-                  setCheckinSuccess(false);
-                }}
-                className="w-full py-4 text-gray-400 text-sm font-bold"
-              >
-                あとで記録する
-              </button>
-            </div>
+            <h3 className="text-2xl font-black mb-2 text-gray-800">完了しました</h3>
+            <p className="text-sm text-gray-400 mb-8 leading-relaxed px-4">記録はカレンダーに保存されました。一歩ずつ、進んでいきましょう。</p>
+            <button 
+              onClick={() => { setIsCheckinModalOpen(false); setCheckinSuccess(false); }}
+              className="w-full bg-slate-900 text-white py-4 rounded-[20px] font-black"
+            >
+              ホームへ戻る
+            </button>
           </div>
         )}
       </div>
@@ -408,11 +411,14 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900 font-sans max-w-md mx-auto relative flex flex-col shadow-2xl">
       {/* Header */}
-      <header className="bg-white px-6 pt-10 pb-4 sticky top-0 z-10">
+      <header className="bg-white/80 backdrop-blur-md px-6 pt-12 pb-4 sticky top-0 z-40">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-black text-gray-800 tracking-tight">Recovery Log</h1>
-            <p className="text-[10px] text-gray-400 font-bold tracking-tighter uppercase opacity-70">Support your peaceful journey</p>
+            <h1 className="text-2xl font-black text-gray-800 tracking-tighter">Recoverly</h1>
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+              <p className="text-[9px] text-gray-400 font-black tracking-widest uppercase">One day at a time</p>
+            </div>
           </div>
           <div className="flex gap-2">
             <button className="p-2.5 text-gray-400 bg-slate-50 rounded-xl hover:text-gray-600 transition-colors"><Settings size={18} /></button>
@@ -428,24 +434,22 @@ export default function App() {
           <div className="space-y-4 animate-in fade-in duration-500">
             <h2 className="text-xl font-bold text-gray-800 px-1">タイムライン</h2>
             {MOCK_FEED.map(item => (
-              <div key={item.id} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
-                <div className="flex justify-between items-start mb-3">
+              <div key={item.id} className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100">
+                <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-[10px] font-bold text-gray-400">匿名</div>
+                    <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-[10px] font-bold text-gray-400">匿名</div>
                     <div>
-                      <p className="text-xs font-bold text-gray-800">{item.user}</p>
-                      <p className="text-[10px] text-gray-400">{item.time}</p>
+                      <p className="text-xs font-black text-gray-800">{item.user}</p>
+                      <p className="text-[10px] text-gray-400 font-medium">{item.time}</p>
                     </div>
                   </div>
-                  <span className="text-[9px] bg-blue-50 px-2 py-1 rounded-full text-blue-500 font-bold uppercase tracking-wider">{item.action}</span>
+                  <span className="text-[9px] bg-blue-50 px-2 py-1 rounded-full text-blue-600 font-black uppercase tracking-wider">{item.action}</span>
                 </div>
                 <p className="text-sm text-gray-600 leading-relaxed mb-4">{item.content}</p>
-                <div className="flex items-center gap-4 border-t border-slate-50 pt-3">
-                  <button className="flex items-center gap-1.5 text-gray-400 hover:text-red-400 transition-colors">
-                    <Heart size={16} fill={item.likes > 0 ? "currentColor" : "none"} className={item.likes > 0 ? "text-red-400" : ""} />
-                    <span className="text-[11px] font-bold">{item.likes > 0 ? '共感あり' : '共感する'}</span>
-                  </button>
-                </div>
+                <button className="flex items-center gap-2 text-gray-400 hover:text-red-400 transition-colors">
+                  <Heart size={18} fill={item.likes > 0 ? "currentColor" : "none"} className={item.likes > 0 ? "text-red-400" : ""} />
+                  <span className="text-[11px] font-black">{item.likes > 0 ? `${item.likes}人が共感` : '共感する'}</span>
+                </button>
               </div>
             ))}
           </div>
@@ -453,8 +457,8 @@ export default function App() {
         {activeTab === 'analytics' && <Analytics />}
         {activeTab === 'friends' && (
           <div className="flex flex-col items-center justify-center h-80 text-gray-400 px-10 text-center">
-            <div className="w-20 h-20 bg-slate-100 rounded-[30px] flex items-center justify-center mb-6">
-              <Users size={40} className="opacity-20" />
+            <div className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center mb-6 shadow-sm border border-gray-100">
+              <Users size={40} className="text-blue-500 opacity-20" />
             </div>
             <h3 className="text-lg font-bold text-gray-800 mb-2">つながりを大切に</h3>
             <p className="text-xs font-medium leading-relaxed">フレンド機能は準備中です。回復を支え合う仲間を見つけましょう。</p>
@@ -462,18 +466,8 @@ export default function App() {
         )}
       </main>
 
-      {/* Floating Action Button */}
-      {(activeTab === 'dashboard' || activeTab === 'analytics') && (
-        <button 
-          onClick={() => setIsCheckinModalOpen(true)}
-          className="fixed bottom-24 right-6 w-16 h-16 bg-blue-600 text-white rounded-[24px] shadow-2xl shadow-blue-200 flex items-center justify-center hover:scale-105 hover:rotate-6 active:scale-95 transition-all z-20 group"
-        >
-          <MapPin size={28} className="group-hover:animate-bounce" />
-        </button>
-      )}
-
       {/* Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-100 px-8 py-3 z-30 max-w-md mx-auto rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-100 px-8 py-4 z-50 max-w-md mx-auto rounded-t-[40px] shadow-[0_-15px_50px_rgba(0,0,0,0.06)]">
         <div className="flex justify-between items-end">
           <TabButton id="dashboard" icon={Clock} label="ホーム" />
           <TabButton id="feed" icon={MessageSquare} label="タイムライン" />
@@ -501,7 +495,15 @@ export default function App() {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
+        input:focus {
+          outline: none;
+        }
       `}</style>
     </div>
   );
 }
+
+const MOCK_FEED = [
+  { id: 1, user: '匿名A', action: 'ミーティング参加', time: '1時間前', content: '今日はステップ3について分かち合いました。少し心が軽くなった気がします。', likes: 2 },
+  { id: 2, user: '仲間B', action: '30日達成', time: '3時間前', content: '静かな一日を過ごせています。仲間の支えに感謝します。', likes: 5 },
+];
