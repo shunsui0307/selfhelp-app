@@ -675,7 +675,12 @@ export default function App() {
             <button onClick={() => setIsSearchModalOpen(false)} className="p-2 -ml-2 text-gray-400 hover:text-gray-600"><X size={24} /></button>
             <div className="flex-1 relative">
               <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input autoFocus type="text" placeholder="会場を検索" className="w-full bg-slate-50 border-none rounded-2xl py-3 pl-11 pr-4 text-sm font-medium" />
+              <input 
+                autoFocus 
+                type="text" 
+                placeholder="会場を検索" 
+                className="w-full bg-slate-50 border-none rounded-2xl py-3 pl-11 pr-4 font-medium text-[16px]" // ズーム防止のため16pxに設定
+              />
             </div>
           </header>
           <div className="flex-1 overflow-y-auto px-6 py-4 no-scrollbar">
